@@ -36,24 +36,7 @@ import colorsys
 import time
 import math
 
-def get_playerctl_color():
-    process = subprocess.Popen(['playerctl', 'status'], stdout=subprocess.PIPE)
-    playing, err = process.communicate()
-    return "#00FF00" if "Play" in playing else "#FFFF00"
-
-def get_playerctl_text():
-    process = subprocess.Popen(['playerctl', 'metadata', 'xesam:artist'], stdout=subprocess.PIPE)
-    artist, err = process.communicate()
-    process = subprocess.Popen(['playerctl', 'metadata', 'xesam:title'], stdout=subprocess.PIPE)
-    title, err = process.communicate()
-    return '%s - %s' % (artist, title)
-
-def get_uptime():
-    process = subprocess.Popen(['uptime', '-p'], stdout=subprocess.PIPE)
-    up, err = process.communicate()
-    return up[0:-1]
 def humanbytes(B):
-   'Return the given bytes as a human friendly KB, MB, GB, or TB string'
    B = float(B)
    KB = float(1024)
    MB = float(KB ** 2) # 1,048,576
@@ -71,7 +54,27 @@ def humanbytes(B):
    elif TB <= B:
       return '{0:6.2f} TB'.format(B/TB)
 
-# background thread to provide the string for the network usage
+
+
+def get_playerctl():
+    process = subprocess.Popen(['playerctl', 'metadata', 'xesam:artist'], stdout=subprocess.PIPE)
+    artist, err = process.communicate()
+    process = subprocess.Popen(['playerctl', 'metadata', 'xesam:title'], stdout=subprocess.PIPE)
+    title, err = process.communicate()
+    return '%s - %s' % (artist, title)
+
+def get_playerctl_color():
+    process = subprocess.Popen(['playerctl', 'status'], stdout=subprocess.PIPE)
+    playing, err = process.communicate()
+    return "#00FF00" if "Play" in playing else "#FFFF00"
+
+
+def get_uptime():
+    process = subprocess.Popen(['uptime', '-p'], stdout=subprocess.PIPE)
+    up, err = process.communicate()
+    return up[0:-1]
+
+
 def network_watch_thread():
     global network_string
     network_string = ""
@@ -93,29 +96,32 @@ def network_watch_thread():
         level_str = u'▁▂▃▄▅▆▇█'
         res_list = [ level_str[x] for x in res_list]
         res_str = ''.join(res_list)
-
         network_string = u'%s, max: %s/s, cur: %s/s' % (res_str, humanbytes(m*1024), humanbytes(s*1024))
 
 def get_net():
     return network_string
 
-def get_ram_usage():
-    process = subprocess.Popen(['cat', '/proc/meminfo'], stdout=subprocess.PIPE)
-    out, err = process.communicate()
+
+def get_ram():
+    f = open('/proc/meminfo')
+    out = f.read()
+    f.close()
     total = re.search('MemTotal:\s*(\d+)', out).group(1);
-    free = re.search('MemFree:\s*(\d+)', out).group(1);
+    free = re.search('MemAvailable:\s*(\d+)', out).group(1);
     percent = 1 - (float(free) / float(total));
     return "RAM: %02.0f%%" % (percent*100)
 
 def get_ram_color():
-    process = subprocess.Popen(['cat', '/proc/meminfo'], stdout=subprocess.PIPE)
-    out, err = process.communicate()
+    f = open('/proc/meminfo')
+    out = f.read()
+    f.close()
     total = re.search('MemTotal:\s*(\d+)', out).group(1)
-    free = re.search('MemFree:\s*(\d+)', out).group(1)
+    free = re.search('MemAvailable:\s*(\d+)', out).group(1)
     percent = float(free) / float(total)
     color = colorsys.hsv_to_rgb(0.3 * percent, 1, 1)
     color8bit = tuple([i*255 for i in color])
     return "#%02x%02x%02x" % color8bit
+
 
 def get_cpu_temp():
     returnList = [];
@@ -141,7 +147,6 @@ def get_cpu_temp():
                 'color': "#%02x%02x%02x" % color8bit
             })
     return returnList;
-
 
 
 def get_tma():
@@ -180,6 +185,9 @@ def get_tma_color():
     except NameError:
         return "";
 
+################################################################################
+################################################################################
+################################################################################
 
 def print_line(message):
     """ Non-buffered printing to stdout. """
@@ -216,10 +224,10 @@ if __name__ == '__main__':
             line, prefix = line[1:], ','
 
         j = json.loads(line)
-        j.insert(-2, {'full_text' : '%s' % get_ram_usage(), 'name' : 'ram', 'color' : get_ram_color()})
+        j.insert(-2, {'full_text' : '%s' % get_ram(), 'name' : 'ram', 'color' : get_ram_color()})
 
         # insert information into the start of the json, but could be anywhere
-        j.insert(0, {'full_text' : '%s' % get_playerctl_text(), 'name' : 'playerctl', 'color' : '%s' % get_playerctl_color()})
+        j.insert(0, {'full_text' : '%s' % get_playerctl(), 'name' : 'playerctl', 'color' : '%s' % get_playerctl_color()})
         j.insert(0, {'full_text' : '%s' % get_net(), 'name' : 'network', 'color' : '#ffffff'})
         j.insert(0, {'full_text' : '%s' % get_tma(), 'name' : 'tma', 'color' : get_tma_color()})
         j.insert(0, {'full_text' : '%s' % get_uptime(), 'name' : 'uptime', 'color' : '#ffffff'})
