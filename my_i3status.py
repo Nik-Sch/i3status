@@ -122,32 +122,38 @@ def get_ram_color():
     color8bit = tuple([i*255 for i in color])
     return "#%02x%02x%02x" % color8bit
 
-
+def get_cpu_fan():
+    process = subprocess.Popen(['sensors'], stdout=subprocess.PIPE)
+    out, err = process.communicate();
+    regex = re.search('([^\n]*Fan:\s*\d+ RPM)', out);
+    if regex == None:
+        return '';
+    return regex.group(1);
 def get_cpu_temp():
     returnList = [];
+
+    filename = '/sys/devices/platform/coretemp.0/hwmon/' + os.listdir('/sys/devices/platform/coretemp.0/hwmon')[0]
     for x in range(1,15):
-        if os.path.exists("/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp" + str(x) + "_label"):
-            f = open("/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp" + str(x) + "_label", "r");
+        if os.path.exists(filename + "/temp" + str(x) + "_label"):
+            f = open(filename + "/temp" + str(x) + "_label", "r");
             name = f.readline().replace('\n', '');
             f.close();
-            if "Package" not in name:
-                continue;
-            name = "Core temp"
-            f = open("/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp" + str(x) + "_input", "r");
+            f = open(filename + "/temp" + str(x) + "_input", "r");
             value = float(f.readline().replace('\n', ''))/1000;
             f.close();
-            f = open("/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp" + str(x) + "_max", "r");
+            f = open(filename + "/temp" + str(x) + "_max", "r");
             maximum = float(f.readline().replace('\n', ''))/1000;
             f.close();
             percent = (value - 20) / (maximum - 20);
             color = colorsys.hsv_to_rgb(1.0/3.0 * (1 - percent), 1, 1);
             color8bit = tuple([i*255 for i in color])
             returnList.append({
-                'text': "%s: %.1f°C" % (name, value),
-                'color': "#%02x%02x%02x" % color8bit
+                'text': "%s: %.1f°C" % ('CPU Temp', value),
+                'color': "#%02x%02x%02x" % color8bit,
+                'value': value
             })
-    return returnList;
-
+    returnList.sort(key=lambda x: x['value'], reverse=True)
+    return returnList[1];
 
 def get_tma():
     f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
@@ -231,10 +237,9 @@ if __name__ == '__main__':
         j.insert(0, {'full_text' : '%s' % get_net(), 'name' : 'network', 'color' : '#ffffff'})
         j.insert(0, {'full_text' : '%s' % get_tma(), 'name' : 'tma', 'color' : get_tma_color()})
         j.insert(0, {'full_text' : '%s' % get_uptime(), 'name' : 'uptime', 'color' : '#ffffff'})
-        x = 0;
-        for temp in get_cpu_temp():
-            j.insert(0, {'full_text' : '%s' % temp['text'], 'name' : 'cputemp' + str(x), 'color' : temp['color']})
-            x += 1
+        j.insert(0, {'full_text' : '%s' % get_cpu_fan(), 'name' : 'uptime', 'color' : '#ffffff'})
+        temp = get_cpu_temp()
+        j.insert(0, {'full_text' : '%s' % temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
 
         # and echo back new encoded json
         print_line(prefix+json.dumps(j))
