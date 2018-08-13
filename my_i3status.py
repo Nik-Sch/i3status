@@ -52,19 +52,39 @@ def get_uptime():
     process = subprocess.Popen(['uptime', '-p'], stdout=subprocess.PIPE)
     up, err = process.communicate()
     return up[0:-1]
+def humanbytes(B):
+   'Return the given bytes as a human friendly KB, MB, GB, or TB string'
+   B = float(B)
+   KB = float(1024)
+   MB = float(KB ** 2) # 1,048,576
+   GB = float(KB ** 3) # 1,073,741,824
+   TB = float(KB ** 4) # 1,099,511,627,776
+
+   if B < KB:
+      return '{0} {1}'.format(B,'By')
+   elif KB <= B < MB:
+      return '{0:6.2f} KB'.format(B/KB)
+   elif MB <= B < GB:
+      return '{0:6.2f} MB'.format(B/MB)
+   elif GB <= B < TB:
+      return '{0:6.2f} GB'.format(B/GB)
+   elif TB <= B:
+      return '{0:6.2f} TB'.format(B/TB)
 
 # background thread to provide the string for the network usage
 def network_watch_thread():
     global network_string
     network_string = ""
-    amount = 32
+    amount = 16
     fifo = deque(amount*[0], amount)
-    while (1):
-        process = subprocess.Popen(['ifstat', '-i', 'enp0s25', '-q', '1', '1'], stdout=subprocess.PIPE)
-        out, err = process.communicate()
-        res = out.splitlines()[-1]
-        rx = res.split()[0]
-        tx = res.split()[1]
+    process = subprocess.Popen(['ifstat', '-i', 'enp0s25', '-q', '2'], stdout=subprocess.PIPE)
+    while process.poll() is None:
+        res  = process.stdout.readline()
+        regex = re.search('(\d+\.\d+)\s*(\d+\.\d+)', res);
+        if regex == None:
+            continue
+        rx = regex.group(1)
+        tx = regex.group(1)
         s = float(rx) + float(tx)
         fifo.append(s)
         l = list(fifo)
@@ -74,7 +94,7 @@ def network_watch_thread():
         res_list = [ level_str[x] for x in res_list]
         res_str = ''.join(res_list)
 
-        network_string = u'%s, max: %.1f kb/s, cur: %.1f kb/s' % (res_str, m, s)
+        network_string = u'%s, max: %s/s, cur: %s/s' % (res_str, humanbytes(m*1024), humanbytes(s*1024))
 
 def get_net():
     return network_string
@@ -101,16 +121,16 @@ def get_cpu_temp():
     returnList = [];
     for x in range(1,15):
         if os.path.exists("/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp" + str(x) + "_label"):
-            f  = open("/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp" + str(x) + "_label", "r");
+            f = open("/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp" + str(x) + "_label", "r");
             name = f.readline().replace('\n', '');
             f.close();
             if "Package" not in name:
                 continue;
             name = "Core temp"
-            f  = open("/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp" + str(x) + "_input", "r");
+            f = open("/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp" + str(x) + "_input", "r");
             value = float(f.readline().replace('\n', ''))/1000;
             f.close();
-            f  = open("/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp" + str(x) + "_max", "r");
+            f = open("/sys/devices/platform/coretemp.0/hwmon/hwmon2/temp" + str(x) + "_max", "r");
             maximum = float(f.readline().replace('\n', ''))/1000;
             f.close();
             percent = (value - 20) / (maximum - 20);
@@ -123,30 +143,36 @@ def get_cpu_temp():
     return returnList;
 
 
-def tma_watch_thread():
-    global tma
-    tma = {'netto': '0:00', 'total': '0:00'}
-    global tma_time
-    tma_time = 0
-    time.sleep(1);
-    process = subprocess.Popen(['/home/schelten/.config/i3status/tma_server.js'], stdout=subprocess.PIPE, universal_newlines=True)
-    while process.poll() is None:
-        tma_string = process.stdout.readline()
+
+def get_tma():
+    f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
+    tma_string = f.readline();
+    f.close();
+    tma = json.loads(tma_string);
+
+    regex = re.search('(\d+):(\d+)', tma['netto']);
+    hours = float(regex.group(1));
+    minutes = float(regex.group(2));
+    tma_time = hours + minutes / 60.0
+    level_str = u' ▁▂▃▄▅▆▇█'
+    block = u'█'
+    empty = u'░'
+    return "%s today: %sh total: %sh" % (
+        ''.join([block for i in range(0, int(tma_time))]) + level_str[int(round((tma_time - int(tma_time)) * (len(level_str) - 1)))] + ''.join([empty for i in range(int(tma_time) + 1, 8)]),
+        tma['netto'],
+        tma['total'])
+
+def get_tma_color():
+    try:
+        f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
+        tma_string = f.readline();
+        f.close();
         tma = json.loads(tma_string);
 
         regex = re.search('(\d+):(\d+)', tma['netto']);
         hours = float(regex.group(1));
         minutes = float(regex.group(2));
         tma_time = hours + minutes / 60.0
-
-def get_tma():
-    level_str = u' ▁▂▃▄▅▆▇█'
-    block = u'█'
-    empty = u'░'
-    return "%s today: %sh total: %sh" % (''.join([block for i in range(0, int(tma_time))]) + level_str[int(round((tma_time - int(tma_time)) * len(level_str)))] + ''.join([empty for i in range(int(tma_time), 8)]), tma['netto'], tma['total'])
-
-def get_tma_color():
-    try:
         percent = min(tma_time, 6.0) / 6.0;
         color = colorsys.hsv_to_rgb(0.3 * percent, 1, 1);
         color8bit = tuple([i*255 for i in color])
@@ -182,8 +208,6 @@ if __name__ == '__main__':
 
     # The second line contains the start of the infinite array.
     print_line(read_line())
-    tma_thread = Thread(target = tma_watch_thread, args = [])
-    tma_thread.start()
 
     while True:
         line, prefix = read_line(), ''

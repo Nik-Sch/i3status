@@ -1,6 +1,7 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 const http = require('http');
 const fs = require('fs');
+const {env} = require('process');
 http.createServer((req, res) => {
   let body = '';
     req.on('data', chunk => {
@@ -9,7 +10,7 @@ http.createServer((req, res) => {
     req.on('end', () => {
       console.log(body);
         body = JSON.parse(body);
-        fs.writeFileSync('/home/schelten/.config/i3status/tma.json', JSON.stringify(body));
+        fs.writeFileSync(env.HOME + '/.config/i3status/tma.json', JSON.stringify(body));
         res.end('ok');
     });
   res.end();
