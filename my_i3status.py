@@ -218,7 +218,10 @@ def get_tma_emojis():
             'Kreowsky, Philipp': '🍺',
             'Schelten, Niklas': '💩',
             'Steinert, Fritjof':'👿',
-            'Schulte, Anton': '🏆'
+            'Schulte, Anton': '🏆',
+            'Candido, Samuele': '🏃',
+            'Stabernack, Benno': '👑',
+            'Stec, Michal': 'M'
         };
         returnString = '';
         for name, emoji in emoji_config.iteritems():
