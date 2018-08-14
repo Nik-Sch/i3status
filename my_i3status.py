@@ -223,7 +223,7 @@ def get_tma_emojis():
         returnString = '';
         for name, emoji in emoji_config.iteritems():
             for colleague in tma['colleagues']:
-                if colleague['name'] == name:
+                if colleague['name'] == name and colleague['present']:
                     returnString += ' ' + emoji;
         return '<big>' + returnString + '</big>'
     except Exception:
