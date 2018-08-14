@@ -77,10 +77,13 @@ def get_uptime():
 
 def network_watch_thread():
     global network_string
+    global network_color
     network_string = ""
+    network_color = ''
     amount = 16
     fifo = deque(amount*[0], amount)
-    process = subprocess.Popen(['ifstat', '-i', 'enp0s25', '-q', '2'], stdout=subprocess.PIPE)
+    process = subprocess.Popen(['ifstat', '-i', 'enp0s25', '-q', '1'], stdout=subprocess.PIPE)
+    global_max = 0;
     while process.poll() is None:
         res  = process.stdout.readline()
         regex = re.search('(\d+\.\d+)\s*(\d+\.\d+)', res);
@@ -89,17 +92,28 @@ def network_watch_thread():
         rx = regex.group(1)
         tx = regex.group(1)
         s = float(rx) + float(tx)
+        if s > global_max:
+            global_max = s
         fifo.append(s)
         l = list(fifo)
+        avg = 0
+        for entry in l:
+            avg += entry
+        avg = avg / amount
         m = max(l)
         res_list = [ int(x / m * 7) for x in l]
         level_str = u'▁▂▃▄▅▆▇█'
         res_list = [ level_str[x] for x in res_list]
         res_str = ''.join(res_list)
-        network_string = u'%s, max: %s/s, cur: %s/s' % (res_str, humanbytes(m*1024), humanbytes(s*1024))
+        network_string = u'%s, max: %s/s, cur: %s/s avg: %s/s gmax: %s/s' % (res_str, humanbytes(m*1024), humanbytes(s*1024), humanbytes(avg*1024), humanbytes(global_max*1024))
+        color = colorsys.hsv_to_rgb(1, 0, 0.5 + 0.5*m/global_max)
+        color8bit = tuple([i*255 for i in color])
+        network_color = "#%02x%02x%02x" % color8bit
 
 def get_net():
     return network_string
+def get_net_color():
+    return network_color
 
 
 def get_ram():
@@ -257,7 +271,7 @@ if __name__ == '__main__':
 
         # insert information into the start of the json, but could be anywhere
         j.insert(0, {'full_text' : '%s' % get_playerctl(), 'name' : 'playerctl', 'color' : '%s' % get_playerctl_color()})
-        j.insert(0, {'full_text' : '%s' % get_net(), 'name' : 'network', 'color' : '#ffffff'})
+        j.insert(0, {'full_text' : '%s' % get_net(), 'name' : 'network', 'color' : get_net_color()})
         j.insert(0, {'full_text' : '%s' % get_tma(), 'name' : 'tma', 'color' : get_tma_color()})
         j.insert(0, {'full_text' : '%s' % get_uptime(), 'name' : 'uptime', 'color' : '#ffffff'})
         j.insert(0, {'full_text' : '%s' % get_cpu_fan(), 'name' : 'uptime', 'color' : '#ffffff'})
