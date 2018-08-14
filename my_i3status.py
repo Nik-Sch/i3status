@@ -202,15 +202,16 @@ def get_tma_emojis():
 
         emoji_config = {
             'Kreowsky, Philipp': '🍺',
-            'Schelten, Niklas': '',
-            'Steinert, Fritjof':'😈'
+            'Schelten, Niklas': '💩',
+            'Steinert, Fritjof':'😈',
+            'Schulte, Anton': '🏆'
         };
         returnString = '';
         for name, emoji in emoji_config.iteritems():
             for colleague in tma['colleagues']:
                 if colleague['name'] == name:
                     returnString += ' ' + emoji;
-        return returnString
+        return '<big>' + returnString + '</big>'
     except Exception:
         return "";
 ################################################################################
@@ -262,7 +263,7 @@ if __name__ == '__main__':
         j.insert(0, {'full_text' : '%s' % get_cpu_fan(), 'name' : 'uptime', 'color' : '#ffffff'})
         temp = get_cpu_temp()
         j.insert(0, {'full_text' : '%s' % temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
-        j.insert(0, {'full_text' : '%s' % get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff'})
+        j.insert(0, {'full_text' : '%s' % get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff', 'markup': 'pango'})
 
         # and echo back new encoded json
         print_line(prefix+json.dumps(j))
