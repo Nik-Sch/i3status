@@ -105,7 +105,7 @@ def network_watch_thread():
         level_str = u'▁▂▃▄▅▆▇█'
         res_list = [ level_str[x] for x in res_list]
         res_str = ''.join(res_list)
-        network_string = u'%s, max: %s/s, cur: %s/s avg: %s/s gmax: %s/s' % (res_str, humanbytes(m*1024), humanbytes(s*1024), humanbytes(avg*1024), humanbytes(global_max*1024))
+        network_string = u'%s max: %s/s cur: %s/s avg: %s/s gmax: %s/s' % (res_str, humanbytes(m*1024), humanbytes(s*1024), humanbytes(avg*1024), humanbytes(global_max*1024))
         color = colorsys.hsv_to_rgb(1, 0, 0.5 + 0.5*m/global_max)
         color8bit = tuple([i*255 for i in color])
         network_color = "#%02x%02x%02x" % color8bit
