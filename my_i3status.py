@@ -156,22 +156,25 @@ def get_cpu_temp():
     return returnList[1];
 
 def get_tma():
-    f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
-    tma_string = f.readline();
-    f.close();
-    tma = json.loads(tma_string);
+    try:
+        f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
+        tma_string = f.readline();
+        f.close();
+        tma = json.loads(tma_string);
 
-    regex = re.search('(\d+):(\d+)', tma['netto']);
-    hours = float(regex.group(1));
-    minutes = float(regex.group(2));
-    tma_time = hours + minutes / 60.0
-    level_str = u' ▁▂▃▄▅▆▇█'
-    block = u'█'
-    empty = u'░'
-    return "%s today: %sh total: %sh" % (
+        regex = re.search('(\d+):(\d+)', tma['netto']);
+        hours = float(regex.group(1));
+        minutes = float(regex.group(2));
+        tma_time = hours + minutes / 60.0
+        level_str = u' ▁▂▃▄▅▆▇█'
+        block = u'█'
+        empty = u'░'
+        return "%s today: %sh total: %sh" % (
         ''.join([block for i in range(0, int(tma_time))]) + level_str[int(round((tma_time - int(tma_time)) * (len(level_str) - 1)))] + ''.join([empty for i in range(int(tma_time) + 1, 8)]),
         tma['netto'],
         tma['total'])
+    except Exception:
+        return ""
 
 def get_tma_color():
     try:
@@ -188,9 +191,28 @@ def get_tma_color():
         color = colorsys.hsv_to_rgb(0.3 * percent, 1, 1);
         color8bit = tuple([i*255 for i in color])
         return "#%02x%02x%02x" % color8bit
-    except NameError:
+    except Exception:
         return "";
+def get_tma_emojis():
+    try:
+        f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
+        tma_string = f.readline();
+        f.close();
+        tma = json.loads(tma_string);
 
+        emoji_config = {
+            'Kreowsky, Philipp': '🍺',
+            'Schelten, Niklas': '',
+            'Steinert, Fritjof':'😈'
+        };
+        returnString = '';
+        for name, emoji in emoji_config.iteritems():
+            for colleague in tma['colleagues']:
+                if colleague['name'] == name:
+                    returnString += ' ' + emoji;
+        return returnString
+    except Exception:
+        return "";
 ################################################################################
 ################################################################################
 ################################################################################
@@ -240,6 +262,7 @@ if __name__ == '__main__':
         j.insert(0, {'full_text' : '%s' % get_cpu_fan(), 'name' : 'uptime', 'color' : '#ffffff'})
         temp = get_cpu_temp()
         j.insert(0, {'full_text' : '%s' % temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
+        j.insert(0, {'full_text' : '%s' % get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff'})
 
         # and echo back new encoded json
         print_line(prefix+json.dumps(j))
