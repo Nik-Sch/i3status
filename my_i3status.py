@@ -228,6 +228,12 @@ def get_tma_emojis():
         return '<big>' + returnString + '</big>'
     except Exception:
         return "";
+def get_cpu_color(text):
+    percent = float(re.search('\d+', text).group(0))/100
+    color = colorsys.hsv_to_rgb(1.0/3.0 * (1 - percent), 1, 1);
+    color8bit = tuple([i*255 for i in color])
+    return "#%02x%02x%02x" % color8bit
+
 ################################################################################
 ################################################################################
 ################################################################################
@@ -267,6 +273,9 @@ if __name__ == '__main__':
             line, prefix = line[1:], ','
 
         j = json.loads(line)
+        for entry in j:
+            if entry['name'] == 'cpu_usage':
+                entry['color'] = get_cpu_color(entry['full_text'])
         j.insert(-2, {'full_text' : '%s' % get_ram(), 'name' : 'ram', 'color' : get_ram_color()})
 
         # insert information into the start of the json, but could be anywhere
@@ -278,6 +287,7 @@ if __name__ == '__main__':
         temp = get_cpu_temp()
         j.insert(0, {'full_text' : '%s' % temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
         j.insert(0, {'full_text' : '%s' % get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff', 'markup': 'pango'})
+
 
         # and echo back new encoded json
         print_line(prefix+json.dumps(j))
