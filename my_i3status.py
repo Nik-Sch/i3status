@@ -221,14 +221,20 @@ def get_tma_emojis():
             'Schulte, Anton': '🏆',
             'Candido, Samuele': '🏃',
             'Stabernack, Benno': '👑',
-            'Stec, Michal': 'M'
+            'Stec, Michal': 'M',
+            'Heine, Carl': 'C'
         };
         returnString = '';
-        for name, emoji in emoji_config.iteritems():
-            for colleague in tma['colleagues']:
-                if colleague['name'] == name and colleague['present']:
-                    returnString += ' ' + emoji;
-        return '<big>' + returnString + '</big>'
+        # for name, emoji in emoji_config.iteritems():
+        #     for colleague in tma['colleagues']:
+        #         if colleague['name'] == name and colleague['present']:
+        #             returnString += ' ' + emoji;
+        # return '<big>' + returnString + '</big>'
+        for colleague in tma['colleagues']:
+            if colleague['present']:
+                regex = re.search('^(.).*, (.)', colleague['name'])
+                returnString += ' ' + regex.group(2) + regex.group(1)
+        return returnString
     except Exception:
         return "";
 def get_cpu_color(text):
