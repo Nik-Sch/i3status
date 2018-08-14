@@ -203,7 +203,7 @@ def get_tma_emojis():
         emoji_config = {
             'Kreowsky, Philipp': '🍺',
             'Schelten, Niklas': '💩',
-            'Steinert, Fritjof':'😈',
+            'Steinert, Fritjof':'👿',
             'Schulte, Anton': '🏆'
         };
         returnString = '';
