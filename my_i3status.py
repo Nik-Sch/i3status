@@ -230,8 +230,9 @@ def get_tma_emojis():
         #         if colleague['name'] == name and colleague['present']:
         #             returnString += ' ' + emoji;
         # return '<big>' + returnString + '</big>'
+        lastname = re.search('[^/]+$', os.environ['HOME']).group(0).lower();
         for colleague in tma['colleagues']:
-            if colleague['present']:
+            if colleague['present'] and re.search('^[^,]*', colleague['name']).group(0).lower() != lastname:
                 regex = re.search('^(.).*, (.)', colleague['name'])
                 returnString += ' ' + regex.group(2) + regex.group(1)
         return returnString
