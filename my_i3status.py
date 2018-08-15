@@ -70,7 +70,7 @@ def get_playerctl_color():
 
 
 def get_uptime():
-    process = subprocess.Popen(['uptime', '-p'], stdout=subprocess.PIPE)
+    process = subprocess.Popen(['ssh', 'yalla@yallaserver', 'uptime', '-p'], stdout=subprocess.PIPE)
     up, err = process.communicate()
     return up[0:-1]
 
@@ -216,26 +216,27 @@ def get_tma_emojis():
 
         emoji_config = {
             'Kreowsky, Philipp': '🍺',
-            'Schelten, Niklas': '💩',
-            'Steinert, Fritjof':'👿',
+            'Schelten, Niklas': '🧗',
+            'Steinert, Fritjof':'💩',
             'Schulte, Anton': '🏆',
             'Candido, Samuele': '🏃',
             'Stabernack, Benno': '👑',
-            'Stec, Michal': 'M',
+            'Stec, Michal': '💃',
             'Heine, Carl': 'C'
         };
         returnString = '';
-        # for name, emoji in emoji_config.iteritems():
-        #     for colleague in tma['colleagues']:
-        #         if colleague['name'] == name and colleague['present']:
-        #             returnString += ' ' + emoji;
-        # return '<big>' + returnString + '</big>'
+        for name, emoji in emoji_config.iteritems():
+            for colleague in tma['colleagues']:
+                if colleague['name'] == name and colleague['present']:
+                    returnString += emoji;
+        return '<big>' + returnString + '</big>'
         lastname = re.search('[^/]+$', os.environ['HOME']).group(0).lower();
+        colleagues_present = [];
         for colleague in tma['colleagues']:
             if colleague['present'] and re.search('^[^,]*', colleague['name']).group(0).lower() != lastname:
                 regex = re.search('^(.).*, (.)', colleague['name'])
-                returnString += ' ' + regex.group(2) + regex.group(1)
-        return returnString
+                colleagues_present.append(regex.group(2) + regex.group(1))
+        return ' '.join(colleagues_present)
     except Exception:
         return "";
 def get_cpu_color(text):
