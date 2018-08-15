@@ -175,7 +175,8 @@ def get_tma():
         tma_string = f.readline();
         f.close();
         tma = json.loads(tma_string);
-
+        if tma['old']:
+            return "OH OH";
         regex = re.search('(\d+):(\d+)', tma['netto']);
         hours = float(regex.group(1));
         minutes = float(regex.group(2));
@@ -196,7 +197,8 @@ def get_tma_color():
         tma_string = f.readline();
         f.close();
         tma = json.loads(tma_string);
-
+        if tma['old']:
+            return "#FF0000";
         regex = re.search('(\d+):(\d+)', tma['netto']);
         hours = float(regex.group(1));
         minutes = float(regex.group(2));
@@ -213,7 +215,8 @@ def get_tma_emojis():
         tma_string = f.readline();
         f.close();
         tma = json.loads(tma_string);
-
+        if tma['old']:
+            return "OH OH";
         emoji_config = {
             'Kreowsky, Philipp': '🍺',
             'Schelten, Niklas': '🧗',
