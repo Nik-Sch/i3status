@@ -36,7 +36,6 @@ import colorsys
 import time
 import math
 
-
 def humanbytes(B):
    B = float(B)
    KB = float(1024)
