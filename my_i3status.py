@@ -186,17 +186,26 @@ def get_tma():
             os.popen(os.environ['HOME'] + '/.config/i3status/tma_scratch.js --force-show')
             n.show()
             return "OH OH";
-        regex = re.search('(\d+):(\d+)', tma['netto']);
-        hours = float(regex.group(1));
-        minutes = float(regex.group(2));
-        tma_time = hours + minutes / 60.0
+        regex = re.search('(\d+):(\d+)', tma['netto'])
+        hours = float(regex.group(1))
+        minutes = float(regex.group(2))
+        netto = hours + minutes / 60.0
+        regex = re.search('(\d+):(\d+)', tma['brutto'])
+        brutto = float(regex.group(1)) + float(regex.group(2)) / 60.0
         level_str = u' ▁▂▃▄▅▆▇█'
         block = u'█'
         empty = u'░'
-        return "%s today: %sh total: %sh" % (
-        ''.join([block for i in range(0, int(tma_time))]) + level_str[int(round((tma_time - int(tma_time)) * (len(level_str) - 1)))] + ''.join([empty for i in range(int(tma_time) + 1, 8)]),
-        tma['netto'],
-        tma['total'])
+        if (brutto - netto) != 0:
+            return "%s today: %sh, pause: %smin, total: %sh" % (
+            ''.join([block for i in range(0, int(netto))]) + level_str[int(round((netto - int(netto)) * (len(level_str) - 1)))] + ''.join([empty for i in range(int(netto) + 1, 8)]),
+            tma['netto'],
+            int((brutto - netto) * 60) % 60,
+            tma['total'])
+        else:
+            return "%s today: %sh, total: %sh" % (
+            ''.join([block for i in range(0, int(netto))]) + level_str[int(round((netto - int(netto)) * (len(level_str) - 1)))] + ''.join([empty for i in range(int(netto) + 1, 8)]),
+            tma['netto'],
+            tma['total'])
     # except Exception:
     #     return ""
 
@@ -211,11 +220,16 @@ def get_tma_color():
         regex = re.search('(\d+):(\d+)', tma['netto']);
         hours = float(regex.group(1));
         minutes = float(regex.group(2));
-        tma_time = hours + minutes / 60.0
-        percent = min(tma_time, 6.0) / 6.0;
+        netto = hours + minutes / 60.0
+        regex = re.search('(\d+):(\d+)', tma['brutto'])
+        brutto = float(regex.group(1)) + float(regex.group(2)) / 60.0
+        percent = min(netto, 6.0) / 6.0;
         color = colorsys.hsv_to_rgb(0.3 * percent, 1, 1);
         color8bit = tuple([i*255 for i in color])
-        return "#%02x%02x%02x" % color8bit
+        if ((brutto - netto) != 0) and ((brutto - netto) < 0.5):
+            return "#5555ff"
+        else:
+            return "#%02x%02x%02x" % color8bit
     except Exception:
         return "";
 def get_tma_emojis():
