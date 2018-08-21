@@ -35,6 +35,8 @@ import os
 import colorsys
 import time
 import math
+from gi.repository import GObject
+from gi.repository import Notify
 
 def humanbytes(B):
    B = float(B)
@@ -176,6 +178,9 @@ def get_tma():
         f.close();
         tma = json.loads(tma_string);
         if tma['old']:
+            n = Notify.Notification.new("Oh oh", "Logge dich mal lieber wieder ein")
+            n.set_urgency(Notify.Urgency.CRITICAL)
+            n.show()
             return "OH OH";
         regex = re.search('(\d+):(\d+)', tma['netto']);
         hours = float(regex.group(1));
@@ -273,6 +278,8 @@ def read_line():
 if __name__ == '__main__':
     net_thread = Thread(target = network_watch_thread, args = [])
     net_thread.start()
+
+    Notify.init("Your status bar")
 
     # Skip the first line which contains the version header.
     print_line(read_line())

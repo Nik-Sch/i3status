@@ -1,3 +1,4 @@
 node_modules/
 tma.json
 error.log
+stderr*
