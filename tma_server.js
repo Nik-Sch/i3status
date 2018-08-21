@@ -21,9 +21,9 @@ http.createServer((req, res) => {
       tma.old = false;
       fs.writeFileSync(env.HOME + '/.config/i3status/tma.json', JSON.stringify(tma));
       clearTimeout(timeout);
-      setTimeout(timeoutHandler, 60000);
+      timeout = setTimeout(timeoutHandler, 60000);
       res.end('ok');
     });
   res.end();
 }).listen(1234);
-setTimeout(timeoutHandler, 60000);
+timeout = setTimeout(timeoutHandler, 60000);
