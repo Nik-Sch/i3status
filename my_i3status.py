@@ -187,19 +187,17 @@ def get_tma():
             n.show()
             return "OH OH";
         regex = re.search('(\d+):(\d+)', tma['netto'])
-        hours = float(regex.group(1))
-        minutes = float(regex.group(2))
-        netto = hours + minutes / 60.0
+        netto = int(regex.group(1)) * 60 + int(regex.group(2))
         regex = re.search('(\d+):(\d+)', tma['brutto'])
-        brutto = float(regex.group(1)) + float(regex.group(2)) / 60.0
+        brutto = int(regex.group(1)) * 60 + int(regex.group(2))
         level_str = u' ▁▂▃▄▅▆▇█'
         block = u'█'
         empty = u'░'
         if (brutto - netto) != 0:
             return "%s today: %sh, pause: %smin, total: %sh" % (
-            ''.join([block for i in range(0, int(netto))]) + level_str[int(round((netto - int(netto)) * (len(level_str) - 1)))] + ''.join([empty for i in range(int(netto) + 1, 8)]),
+            ''.join([block for i in range(0, netto/60)]) + level_str[int(round((netto - int(netto)) * (len(level_str) - 1)))] + ''.join([empty for i in range(netto/60 + 1, 8)]),
             tma['netto'],
-            int((brutto - netto) * 60) % 60,
+            (brutto - netto) % 60,
             tma['total'])
         else:
             return "%s today: %sh, total: %sh" % (
@@ -218,15 +216,13 @@ def get_tma_color():
         if tma['old']:
             return "#FF0000";
         regex = re.search('(\d+):(\d+)', tma['netto']);
-        hours = float(regex.group(1));
-        minutes = float(regex.group(2));
-        netto = hours + minutes / 60.0
+        netto = int(regex.group(1)) * 60 + int(regex.group(2))
         regex = re.search('(\d+):(\d+)', tma['brutto'])
-        brutto = float(regex.group(1)) + float(regex.group(2)) / 60.0
-        percent = min(netto, 6.0) / 6.0;
+        brutto = int(regex.group(1)) * 60 + int(regex.group(2))
+        percent = min(netto, 360.0) / 360.0;
         color = colorsys.hsv_to_rgb(0.3 * percent, 1, 1);
         color8bit = tuple([i*255 for i in color])
-        if ((brutto - netto) != 0) and ((brutto - netto) < 0.5):
+        if ((brutto - netto) != 0) and ((brutto - netto) < 30):
             return "#5555ff"
         else:
             return "#%02x%02x%02x" % color8bit
