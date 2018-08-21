@@ -35,6 +35,8 @@ import os
 import colorsys
 import time
 import math
+import gi
+gi.require_version('Notify', '0.7')
 from gi.repository import GObject
 from gi.repository import Notify
 
@@ -172,7 +174,7 @@ def get_cpu_temp():
     return returnList[1];
 
 def get_tma():
-    try:
+    # try:
         f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
         tma_string = f.readline();
         f.close();
@@ -180,6 +182,8 @@ def get_tma():
         if tma['old']:
             n = Notify.Notification.new("Oh oh", "Logge dich mal lieber wieder ein")
             n.set_urgency(Notify.Urgency.CRITICAL)
+            # n.add_action('asd', 'asd', lambda x: echo(x))
+            os.popen(os.environ['HOME'] + '/.config/i3status/tma_scratch.js --force-show')
             n.show()
             return "OH OH";
         regex = re.search('(\d+):(\d+)', tma['netto']);
@@ -193,8 +197,8 @@ def get_tma():
         ''.join([block for i in range(0, int(tma_time))]) + level_str[int(round((tma_time - int(tma_time)) * (len(level_str) - 1)))] + ''.join([empty for i in range(int(tma_time) + 1, 8)]),
         tma['netto'],
         tma['total'])
-    except Exception:
-        return ""
+    # except Exception:
+    #     return ""
 
 def get_tma_color():
     try:
