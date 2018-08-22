@@ -37,8 +37,7 @@ import time
 import math
 import gi
 gi.require_version('Notify', '0.7')
-from gi.repository import GObject
-from gi.repository import Notify
+# from gi.repository import Notify
 
 def humanbytes(B):
    B = float(B)
@@ -48,7 +47,7 @@ def humanbytes(B):
    TB = float(KB ** 4) # 1,099,511,627,776
 
    if B < KB:
-      return '{0} {1}'.format(B,'By')
+       return '{0:3.0f} By'.format(B)
    elif KB <= B < MB:
       return '{0:3.0f} KB'.format(B/KB)
    elif MB <= B < GB:
@@ -85,16 +84,17 @@ def network_watch_thread():
     network_string = ""
     network_color = ''
     amount = 16
-    fifo = deque(amount*[0], amount)
+    fifo = deque(amount*[1/1024.0], amount)
     process = subprocess.Popen(['ifstat', '-i', 'enp0s25', '-q', '1'], stdout=subprocess.PIPE)
-    global_max = 0;
+    global_max = 1/1024.0;
     while process.poll() is None:
         res  = process.stdout.readline()
         regex = re.search('(\d+\.\d+)\s*(\d+\.\d+)', res);
         if regex == None:
+            print >> sys.stderr, 'no match' + res
             continue
         rx = regex.group(1)
-        tx = regex.group(1)
+        tx = regex.group(2)
         s = float(rx) + float(tx)
         if s > global_max:
             global_max = s
@@ -103,17 +103,16 @@ def network_watch_thread():
         avg = 0
         for entry in l:
             avg += entry
-        avg = avg / amount
-        m = max(l)
-        res_list = [ int(x / m * 7) for x in l]
-        level_str = u'▁▂▃▄▅▆▇█'
-        res_list = [ level_str[x] for x in res_list]
-        res_str = ''.join(res_list)
-        network_string = u'%s max: %s/s cur: %s/s avg: %s/s gmax: %s/s' % (res_str, humanbytes(m*1024), humanbytes(s*1024), humanbytes(avg*1024), humanbytes(global_max*1024))
-        color = colorsys.hsv_to_rgb(1, 0, 0.5 + 0.5*m/global_max)
-        color8bit = tuple([i*255 for i in color])
-        network_color = "#%02x%02x%02x" % color8bit
-
+            avg = avg / amount
+            m = max(l)
+            res_list = [ int(x / m * 7) for x in l]
+            level_str = u'▁▂▃▄▅▆▇█'
+            res_list = [ level_str[min(max(x, 0), 7)] for x in res_list]
+            res_str = ''.join(res_list)
+            network_string = u'%s max: %s/s cur: %s/s avg: %s/s gmax: %s/s' % (res_str, humanbytes(m*1024), humanbytes(s*1024), humanbytes(avg*1024), humanbytes(global_max*1024))
+            color = colorsys.hsv_to_rgb(1, 0, 0.5 + 0.5*m/global_max)
+            color8bit = tuple([i*255 for i in color])
+            network_color = "#%02x%02x%02x" % color8bit
 def get_net():
     return network_string
 def get_net_color():
@@ -180,11 +179,11 @@ def get_tma():
         f.close();
         tma = json.loads(tma_string);
         if tma['old']:
-            n = Notify.Notification.new("Oh oh", "Logge dich mal lieber wieder ein")
-            n.set_urgency(Notify.Urgency.CRITICAL)
+            # n = Notify.Notification.new("Oh oh", "Logge dich mal lieber wieder ein")
+            # n.set_urgency(Notify.Urgency.CRITICAL)
             # n.add_action('asd', 'asd', lambda x: echo(x))
             os.popen(os.environ['HOME'] + '/.config/i3status/tma_scratch.js --force-show')
-            n.show()
+            # n.show()
             return "OH OH";
         regex = re.search('(\d+):(\d+)', tma['netto'])
         netto = int(regex.group(1)) * 60 + int(regex.group(2))
@@ -193,15 +192,16 @@ def get_tma():
         level_str = u' ▁▂▃▄▅▆▇█'
         block = u'█'
         empty = u'░'
+        progress_bar = ''.join([block for i in range(0, netto/60)]) + level_str[(netto%60)/60*8] + ''.join([empty for i in range(netto/60 + 1, 8)])
         if (brutto - netto) != 0:
             return "%s today: %sh, pause: %smin, total: %sh" % (
-            ''.join([block for i in range(0, netto/60)]) + level_str[int(round((netto - int(netto)) * (len(level_str) - 1)))] + ''.join([empty for i in range(netto/60 + 1, 8)]),
+            progress_bar,
             tma['netto'],
             (brutto - netto) % 60,
             tma['total'])
         else:
             return "%s today: %sh, total: %sh" % (
-            ''.join([block for i in range(0, int(netto))]) + level_str[int(round((netto - int(netto)) * (len(level_str) - 1)))] + ''.join([empty for i in range(int(netto) + 1, 8)]),
+            progress_bar,
             tma['netto'],
             tma['total'])
     # except Exception:
@@ -293,7 +293,7 @@ if __name__ == '__main__':
     net_thread = Thread(target = network_watch_thread, args = [])
     net_thread.start()
 
-    Notify.init("Your status bar")
+    # Notify.init("Your status bar")
 
     # Skip the first line which contains the version header.
     print_line(read_line())
