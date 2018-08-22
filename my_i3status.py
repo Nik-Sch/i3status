@@ -192,7 +192,7 @@ def get_tma():
         level_str = u' ▁▂▃▄▅▆▇█'
         block = u'█'
         empty = u'░'
-        progress_bar = ''.join([block for i in range(0, netto/60)]) + level_str[(netto%60)/60*8] + ''.join([empty for i in range(netto/60 + 1, 8)])
+        progress_bar = ''.join([block for i in range(0, netto/60)]) + level_str[(netto%60)*8/60] + ''.join([empty for i in range(netto/60 + 1, 8)])
         if (brutto - netto) != 0:
             return "%s today: %sh, pause: %smin, total: %sh" % (
             progress_bar,
