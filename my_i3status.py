@@ -173,7 +173,7 @@ def get_cpu_temp():
     return returnList[1];
 
 def get_tma():
-    # try:
+    try:
         f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
         tma_string = f.readline();
         f.close();
@@ -204,8 +204,9 @@ def get_tma():
             progress_bar,
             tma['netto'],
             tma['total'])
-    # except Exception:
-    #     return ""
+    except Exception as e:
+        print >> sys.stderr, 'tma sucks: ' + str(e)
+        return ""
 
 def get_tma_color():
     try:
