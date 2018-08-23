@@ -1,0 +1,22 @@
+{
+  "name": "i3status",
+  "version": "1.0.0",
+  "description": "- `sudo npm i -g pm2` - `sudo pm2 startup` - `pm2 start tma_server.js`",
+  "main": "greasescript.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nik-Sch/i3status.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Nik-Sch/i3status/issues"
+  },
+  "homepage": "https://github.com/Nik-Sch/i3status#readme",
+  "dependencies": {
+    "command-line-args": "^5.0.2"
+  }
+}
