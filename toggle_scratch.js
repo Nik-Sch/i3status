@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-'use strict';
 
 const exec = require("child_process").exec
 const commandLineArgs = require('command-line-args')
@@ -24,6 +23,11 @@ const args = commandLineArgs([
     type: Boolean
   },
   {
+    name: 'checkClass',
+    alias: 'c',
+    type: Boolean
+  },
+  {
     name: 'title',
     type: String,
     defaultOption: true
@@ -33,7 +37,7 @@ console.log(args)
 let title = args.title;
 
 function getNodes(data) {
-  if (data.output && data.name && data.name.search(title) > -1) {
+  if (data.output && data.name && (args.checkClass ? (data.window_properties && data.window_properties.class.search(title) > -1 ): data.name.toLowerCase().search(title.toLowerCase()) > -1)) {
     console.log('found');
     return data.output.search("__i3") > -1;
   }
@@ -55,25 +59,28 @@ function getNodes(data) {
 
 
 exec("i3-msg -t get_tree", (error, stdout) => {
-  j = JSON.parse(stdout);
+  const checkThing = args.checkClass ? 'class' : 'title';
+  const j = JSON.parse(stdout);
   let result = getNodes(j)
+  console.log(result, 'result');
   if (result == null) {
-    if (title.search('calculator')) {
+    if (title.search('calculator') > -1) {
       exec('gnome-calculator &');
-    } else if (title.search('MyTMA')) {
+    } else if (title.search('MyTMA') > -1) {
       exec("chromium-browser --new-window https://mytma.fe.hhi.de/sinfo/Mytma &");
     } else {
       exec(`notify-send "Couldn't find ${title}. Please open it."`);
     }
   } else if (result) {
-    exec(`i3-msg [title=\"${title}\"] move workspace current`);
+    exec(`i3-msg "[${checkThing}=\"${title}\"] move workspace current"`);
     if (args.floating) {
-      exec(`i3-msg [title=\"${title}\"] floating enable`);
+      exec(`i3-msg "[${checkThing}=\"${title}\"] floating enable"`);
     } else {
-      exec(`i3-msg [title=\"${title}\"] floating disable`);
+      exec(`i3-msg "[${checkThing}=\"${title}\"] floating disable"`);
     }
 
   } else if (args.forceShow !== true) {
-    exec(`i3-msg [title=\"${title}\"] move scratchpad`);
+    console.log(`i3-msg "[${checkThing}=\"${title}\"] move scratchpad"`)
+    exec(`i3-msg "[${checkThing}=\"${title}\"] move scratchpad"`);
   }
 });
