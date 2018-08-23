@@ -1,21 +1,36 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const exec = require("child_process").exec
+const commandLineArgs = require('command-line-args')
+
+
 const {
   env,
   argv
 } = require('process');
 
-if (argv.length < 3) {
-  console.error('Too few arguments. Title is required. Options: -f: make window floating, -s always show');
-  return;
-} else if (argv.length == 3) {
-  argv[3] = ' ';
-  argv[4] = ' ';
-} else if (argv.length == 4) {
-  argv[4] = ' ';
-}
-let title = argv[2];
+
+const args = commandLineArgs([
+  {
+    name: 'floating',
+    alias: 'f',
+    type: Boolean
+  },
+  {
+    name: 'forceShow',
+    alias: 's',
+    type: Boolean
+  },
+  {
+    name: 'title',
+    type: String,
+    defaultOption: true
+  }
+]);
+console.log(args)
+let title = args.title;
 
 function getNodes(data) {
   if (data.output && data.name && data.name.search(title) > -1) {
@@ -52,13 +67,13 @@ exec("i3-msg -t get_tree", (error, stdout) => {
     }
   } else if (result) {
     exec(`i3-msg [title=\"${title}\"] move workspace current`);
-    if (argv[3].search('f') == -1 && argv[4].search('f') == -1) {
-      exec(`i3-msg [title=\"${title}\"] floating disable`);
-    } else {
+    if (args.floating) {
       exec(`i3-msg [title=\"${title}\"] floating enable`);
+    } else {
+      exec(`i3-msg [title=\"${title}\"] floating disable`);
     }
 
-  } else if (argv[3].search('s') == -1 && argv[4].search('s') == -1) {
+  } else if (args.forceShow !== true) {
     exec(`i3-msg [title=\"${title}\"] move scratchpad`);
   }
 });
