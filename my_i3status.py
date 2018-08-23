@@ -182,7 +182,7 @@ def get_tma():
             # n = Notify.Notification.new("Oh oh", "Logge dich mal lieber wieder ein")
             # n.set_urgency(Notify.Urgency.CRITICAL)
             # n.add_action('asd', 'asd', lambda x: echo(x))
-            os.popen(os.environ['HOME'] + '/.config/i3status/tma_scratch.js --force-show')
+            os.popen(os.environ['HOME'] + '/.config/i3status/toggle_scratch.js MyTMA -s')
             # n.show()
             return "OH OH";
         regex = re.search('(\d+):(\d+)', tma['netto'])
