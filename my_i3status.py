@@ -189,7 +189,7 @@ def get_tma():
         netto = int(regex.group(1)) * 60 + int(regex.group(2))
         regex = re.search('(\d+):(\d+)', tma['brutto'])
         brutto = int(regex.group(1)) * 60 + int(regex.group(2))
-        level_str = u' ▁▂▃▄▅▆▇█'
+        level_str = u'░▁▂▃▄▅▆▇█'
         block = u'█'
         empty = u'░'
         progress_bar = ''.join([block for i in range(0, netto/60)]) + level_str[(netto%60)*8/60] + ''.join([empty for i in range(netto/60 + 1, 8)])
