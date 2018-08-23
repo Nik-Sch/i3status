@@ -67,7 +67,7 @@ exec("i3-msg -t get_tree", (error, stdout) => {
     if (title.search('calculator') > -1) {
       exec('gnome-calculator &');
     } else if (title.search('MyTMA') > -1) {
-      exec("chromium-browser --new-window https://mytma.fe.hhi.de/sinfo/Mytma &");
+      exec("chromium-browser --new-window --app=https://mytma.fe.hhi.de/sinfo/Mytma &");
     } else {
       exec(`notify-send "Couldn't find ${title}. Please open it."`);
     }
