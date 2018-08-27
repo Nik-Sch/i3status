@@ -111,7 +111,7 @@ def get_playerctl_color():
 
 
 def get_uptime():
-    process = subprocess.Popen(['ssh', 'yalla@yallaserver', 'uptime', '-p'], stdout=subprocess.PIPE)
+    process = subprocess.Popen(['uptime', '-p'], stdout=subprocess.PIPE)
     up, err = process.communicate()
     return up[0:-1]
 
