@@ -57,19 +57,41 @@ def humanbytes(B):
    elif TB <= B:
       return '{0:3.0f} TB'.format(B/TB)
 
-
 def get_mate():
     process = subprocess.Popen(["curl", "-s", "https://anton-schulte.de/matebot/"], stdout=subprocess.PIPE)
     mate, err = process.communicate()
-    mate = json.loads(mate)
-    mate = sorted(mate, key=lambda x: int(x['konsumiert']), reverse=True)
+    peoples = json.loads(mate)
+    peoples = sorted(peoples, key=lambda x: int(x['konsumiert']), reverse=True)
+    rank = 3;
+    if (rank > len(peoples)):
+        rank = len(peoples);
+    leaderboard = {};
+    i = 0;
+    while (i < rank and len(peoples) > 0):
+        dudes = [];
+        dudes.append(peoples.pop(0));
+        while(len(peoples) > 0 and int(peoples[0]['konsumiert']) == int(dudes[0]['konsumiert'])):
+            dudes.append(peoples.pop(0));
+        leaderboard[i] = dudes;
+        i += len(dudes);
+    # print leaderboard
+    textArray = [];
     leadershipEmoji = {
-          0: u'🥇',
-          1: u'🥈',
-          2: u'🥉'
-        }
-    leader_str = ['%s (%s)' % (x['name'], x['konsumiert']) for x in mate]
-    return ', '.join(['%s %s' % (leadershipEmoji[x], leader_str[x]) for x in range(0, 3)])
+    0: u'🥇',
+    1: u'🥈',
+    2: u'🥉'
+    }
+    for i in range(rank, -1, -1):
+        if i in leadershipEmoji:
+            emoji = leadershipEmoji[i]
+        else:
+            emoji = '💩'
+        if i in leaderboard:
+            dudesText = ' '.join(list(map(lambda dude: "%s (%s)" %(dude['name'], dude['konsumiert']), leaderboard[i])));
+            textArray.append(emoji + ' ' +  dudesText);
+    textArray = textArray[::-1];
+    # print ', '.join(textArray)
+    return ', '.join(textArray)
 
 
 def get_playerctl():
