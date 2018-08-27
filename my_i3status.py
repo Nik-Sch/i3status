@@ -59,17 +59,21 @@ def humanbytes(B):
 
 
 def get_mate():
-    process = subprocess.Popen(["curl", "-s", "https://anton-schulte.de/matebot/"], stdout=subprocess.PIPE)
-    mate, err = process.communicate()
-    mate = json.loads(mate)
-    mate = sorted(mate, key=lambda x: int(x['konsumiert']), reverse=True)
-    leadershipEmoji = {
-          0: u'🥇',
-          1: u'🥈',
-          2: u'🥉'
-        }
-    leader_str = ['%s (%s)' % (x['name'], x['konsumiert']) for x in mate]
-    return ', '.join(['%s %s' % (leadershipEmoji[x], leader_str[x]) for x in range(0, 3)])
+    try:
+        process = subprocess.Popen(["curl", "-s", "https://anton-schulte.de/matebot/"], stdout=subprocess.PIPE)
+        mate, err = process.communicate()
+        mate = json.loads(mate)
+        mate = sorted(mate, key=lambda x: int(x['konsumiert']), reverse=True)
+        leadershipEmoji = {
+              0: u'🥇',
+              1: u'🥈',
+              2: u'🥉'
+            }
+        leader_str = ['%s (%s)' % (x['name'], x['konsumiert']) for x in mate]
+        return ', '.join(['%s %s' % (leadershipEmoji[x], leader_str[x]) for x in range(0, 3)])
+    except Exception as e:
+        print >> sys.stderr, 'Mate:' + str(e)
+        return ''
 
 
 def get_playerctl():
