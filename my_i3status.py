@@ -87,7 +87,7 @@ def get_mate():
         else:
             emoji = '💩'
         if i in leaderboard:
-            dudesText = ' '.join(list(map(lambda dude: "%s (%s)" %(dude['name'], dude['konsumiert']), leaderboard[i])));
+            dudesText = ', '.join(list(map(lambda dude: "%s (%s)" %(dude['name'], dude['konsumiert']), leaderboard[i])));
             textArray.append(emoji + ' ' +  dudesText);
     textArray = textArray[::-1];
     # print ', '.join(textArray)
