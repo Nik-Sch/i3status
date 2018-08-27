@@ -58,6 +58,19 @@ def humanbytes(B):
       return '{0:3.0f} TB'.format(B/TB)
 
 
+def get_mate():
+    process = subprocess.Popen(["curl", "-s", "https://anton-schulte.de/matebot/"], stdout=subprocess.PIPE)
+    mate, err = process.communicate()
+    mate = json.loads(mate)
+    mate = sorted(mate, key=lambda x: int(x['konsumiert']), reverse=True)
+    leadershipEmoji = {
+          0: u'🥇',
+          1: u'🥈',
+          2: u'🥉'
+        }
+    leader_str = ['%s (%s)' % (x['name'], x['konsumiert']) for x in mate]
+    return ', '.join(['%s %s' % (leadershipEmoji[x], leader_str[x]) for x in range(0, 3)])
+
 
 def get_playerctl():
     process = subprocess.Popen(['playerctl', 'metadata', 'xesam:artist'], stdout=subprocess.PIPE)
@@ -323,6 +336,7 @@ if __name__ == '__main__':
         temp = get_cpu_temp()
         j.insert(0, {'full_text' : '%s' % temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
         j.insert(0, {'full_text' : '%s' % get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff', 'markup': 'pango'})
+        j.insert(0, {'full_text' : '%s' % get_mate(), 'name' : 'mate', 'color' : '#ffffff', 'markup': 'pango'})
 
 
         # and echo back new encoded json
