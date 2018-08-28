@@ -36,6 +36,8 @@ import colorsys
 import time
 import math
 import gi
+import random
+
 gi.require_version('Notify', '0.7')
 # from gi.repository import Notify
 
@@ -86,7 +88,7 @@ def get_mate():
             if i in leadershipEmoji:
                 emoji = leadershipEmoji[i]
             else:
-                emoji = '💩'
+                emoji = ''.join([u'💩' for x in range(2, i)])
             if i in leaderboard:
                 dudesText = ', '.join(list(map(lambda dude: "%s (%s)" %(dude['name'], dude['konsumiert']), leaderboard[i])));
                 textArray.append(emoji + ' ' +  dudesText);
@@ -283,7 +285,9 @@ def get_tma_emojis():
             'Candido, Samuele': '🏃',
             'Stabernack, Benno': '👑',
             'Stec, Michal': '💃',
-            'Heine, Carl': 'C'
+            'Heine, Carl': 'C',
+            'Thieme, Paul': 'P',
+            'Vallavanthara, Amal': 'A'
         };
         returnString = '';
         for name, emoji in emoji_config.iteritems():
@@ -341,28 +345,32 @@ if __name__ == '__main__':
     print_line(read_line())
 
     while True:
-        line, prefix = read_line(), ''
-        # ignore comma at start of lines
-        if line.startswith(','):
-            line, prefix = line[1:], ','
+        try:
+            line, prefix = read_line(), ''
+            # ignore comma at start of lines
+            if line.startswith(','):
+                line, prefix = line[1:], ','
 
-        j = json.loads(line)
-        for entry in j:
-            if entry['name'] == 'cpu_usage':
-                entry['color'] = get_cpu_color(entry['full_text'])
-        j.insert(-2, {'full_text' : '%s' % get_ram(), 'name' : 'ram', 'color' : get_ram_color()})
+            j = json.loads(line)
+            for entry in j:
+                if entry['name'] == 'cpu_usage':
+                    entry['color'] = get_cpu_color(entry['full_text'])
+            j.insert(-2, {'full_text' : '%s' % get_ram(), 'name' : 'ram', 'color' : get_ram_color()})
 
-        # insert information into the start of the json, but could be anywhere
-        j.insert(0, {'full_text' : '%s' % get_playerctl(), 'name' : 'playerctl', 'color' : '%s' % get_playerctl_color()})
-        j.insert(0, {'full_text' : '%s' % get_net(), 'name' : 'network', 'color' : get_net_color()})
-        j.insert(0, {'full_text' : '%s' % get_tma(), 'name' : 'tma', 'color' : get_tma_color()})
-        j.insert(0, {'full_text' : '%s' % get_uptime(), 'name' : 'uptime', 'color' : '#ffffff'})
-        j.insert(0, {'full_text' : '%s' % get_cpu_fan(), 'name' : 'uptime', 'color' : '#ffffff'})
-        temp = get_cpu_temp()
-        j.insert(0, {'full_text' : '%s' % temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
-        j.insert(0, {'full_text' : '%s' % get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff', 'markup': 'pango'})
-        j.insert(0, {'full_text' : '%s' % get_mate(), 'name' : 'mate', 'color' : '#ffffff', 'markup': 'pango'})
+            # insert information into the start of the json, but could be anywhere
+            j.insert(0, {'full_text' : '%s' % get_playerctl(), 'name' : 'playerctl', 'color' : '%s' % get_playerctl_color()})
+            j.insert(0, {'full_text' : '%s' % get_net(), 'name' : 'network', 'color' : get_net_color()})
+            j.insert(0, {'full_text' : '%s' % get_tma(), 'name' : 'tma', 'color' : get_tma_color()})
+            j.insert(0, {'full_text' : '%s' % get_uptime(), 'name' : 'uptime', 'color' : '#ffffff'})
+            j.insert(0, {'full_text' : '%s' % get_cpu_fan(), 'name' : 'uptime', 'color' : '#ffffff'})
+            temp = get_cpu_temp()
+            j.insert(0, {'full_text' : '%s' % temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
+            j.insert(0, {'full_text' : '%s' % get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff', 'markup': 'pango'})
+            j.insert(0, {'full_text' : '%s' % get_mate(), 'name' : 'mate', 'color' : '#ffffff', 'markup': 'pango'})
 
 
-        # and echo back new encoded json
-        print_line(prefix+json.dumps(j))
+            # and echo back new encoded json
+            print_line(prefix+json.dumps(j))
+        except Exception as e:
+            print >> sys.stderr, 'i3status sucks: ' + str(e)
+            print_line("{}");
