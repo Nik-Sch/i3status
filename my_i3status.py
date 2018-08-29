@@ -36,6 +36,8 @@ import colorsys
 import time
 import math
 import gi
+import random
+
 gi.require_version('Notify', '0.7')
 # from gi.repository import Notify
 
@@ -85,7 +87,7 @@ def get_mate():
             if i in leadershipEmoji:
                 emoji = leadershipEmoji[i]
             else:
-                emoji = '💩'
+                emoji = ''.join([u'💩' for x in range(2, i)])
             if i in leaderboard:
                 dudesText = ', '.join(list(map(lambda dude: "%s (%s)" %(dude['name'], dude['konsumiert']), leaderboard[i])));
                 textArray.append(emoji + ' ' +  dudesText);
@@ -287,7 +289,9 @@ def get_tma_emojis():
             'Candido, Samuele': '🏃',
             'Stabernack, Benno': '👑',
             'Stec, Michal': '💃',
-            'Heine, Carl': 'C'
+            'Heine, Carl': 'C',
+            'Thieme, Paul': 'P',
+            'Vallavanthara, Amal': 'A'
         };
         returnString = '';
         for name, emoji in emoji_config.iteritems():
@@ -346,10 +350,11 @@ if __name__ == '__main__':
     print_line(read_line())
 
     while True:
-        line, prefix = read_line(), ''
-        # ignore comma at start of lines
-        if line.startswith(','):
-            line, prefix = line[1:], ','
+        try:
+            line, prefix = read_line(), ''
+            # ignore comma at start of lines
+            if line.startswith(','):
+                line, prefix = line[1:], ','
 
         j = json.loads(line)
         for entry in j:
@@ -368,5 +373,8 @@ if __name__ == '__main__':
         j.insert(0, {'full_text' : get_mate(), 'name' : 'mate', 'color' : '#ffffff', 'markup': 'pango'})
 
 
-        # and echo back new encoded json
-        print_line(prefix+json.dumps(j))
+            # and echo back new encoded json
+            print_line(prefix+json.dumps(j))
+        except Exception as e:
+            print >> sys.stderr, 'i3status sucks: ' + str(e)
+            print_line("{}");
