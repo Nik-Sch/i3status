@@ -35,11 +35,6 @@ import os
 import colorsys
 import time
 import math
-import gi
-import random
-
-gi.require_version('Notify', '0.7')
-# from gi.repository import Notify
 
 def humanbytes(B):
    B = float(B)
@@ -207,7 +202,7 @@ def get_cpu_temp():
             color = colorsys.hsv_to_rgb(1.0/3.0 * (1 - percent), 1, 1);
             color8bit = tuple([i*255 for i in color])
             returnList.append({
-                'text': "%s: %.1f°C" % ('CPU Temp', value),
+                'text': "%s: %.1f°C" % ('Temp', value),
                 'color': "#%02x%02x%02x" % color8bit,
                 'value': value
             })
@@ -222,11 +217,7 @@ def get_tma():
         f.close();
         tma = json.loads(tma_string);
         if tma['old']:
-            # n = Notify.Notification.new("Oh oh", "Logge dich mal lieber wieder ein")
-            # n.set_urgency(Notify.Urgency.CRITICAL)
-            # n.add_action('asd', 'asd', lambda x: echo(x))
             os.popen(os.environ['HOME'] + '/.config/i3status/toggle_scratch.js MyTMA -s')
-            # n.show()
             return "OH OH";
         regex = re.search('(\d+):(\d+)', tma['netto'])
         netto = int(regex.group(1)) * 60 + int(regex.group(2))
@@ -356,21 +347,21 @@ if __name__ == '__main__':
             if line.startswith(','):
                 line, prefix = line[1:], ','
 
-        j = json.loads(line)
-        for entry in j:
-            if entry['name'] == 'cpu_usage':
-                entry['color'] = get_cpu_color(entry['full_text'])
-        j.insert(-2, {'full_text' : get_ram(), 'name' : 'ram', 'color' : get_ram_color()})
+            j = json.loads(line)
+            for entry in j:
+                if entry['name'] == 'cpu_usage':
+                    entry['color'] = get_cpu_color(entry['full_text'])
+            j.insert(-2, {'full_text' : get_ram(), 'name' : 'ram', 'color' : get_ram_color()})
 
-        j.insert(0, {'full_text' : get_playerctl(), 'name' : 'playerctl', 'color' : get_playerctl_color()})
-        j.insert(0, {'full_text' : get_net(), 'name' : 'network', 'color' : get_net_color()})
-        j.insert(0, {'full_text' : get_tma(), 'name' : 'tma', 'color' : get_tma_color()})
-        j.insert(0, {'full_text' : get_uptime(), 'name' : 'uptime', 'color' : '#ffffff'})
-        j.insert(0, {'full_text' : get_cpu_fan(), 'name' : 'uptime', 'color' : '#ffffff'})
-        temp = get_cpu_temp()
-        j.insert(0, {'full_text' : temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
-        j.insert(0, {'full_text' : get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff', 'markup': 'pango'})
-        j.insert(0, {'full_text' : get_mate(), 'name' : 'mate', 'color' : '#ffffff', 'markup': 'pango'})
+            j.insert(0, {'full_text' : get_playerctl(), 'name' : 'playerctl', 'color' : get_playerctl_color()})
+            j.insert(0, {'full_text' : get_net(), 'name' : 'network', 'color' : get_net_color()})
+            j.insert(0, {'full_text' : get_tma(), 'name' : 'tma', 'color' : get_tma_color()})
+            j.insert(0, {'full_text' : get_uptime(), 'name' : 'uptime', 'color' : '#ffffff'})
+            j.insert(0, {'full_text' : get_cpu_fan(), 'name' : 'uptime', 'color' : '#ffffff'})
+            temp = get_cpu_temp()
+            j.insert(0, {'full_text' : temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
+            j.insert(0, {'full_text' : get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff', 'markup': 'pango'})
+            j.insert(0, {'full_text' : get_mate(), 'name' : 'mate', 'color' : '#ffffff', 'markup': 'pango'})
 
 
             # and echo back new encoded json
