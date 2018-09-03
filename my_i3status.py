@@ -96,15 +96,17 @@ def get_mate():
 def get_playerctl():
     process = subprocess.Popen(['playerctl', 'metadata', 'xesam:artist'], stdout=subprocess.PIPE)
     artist, err = process.communicate()
-    process = subprocess.Popen(['playerctl', 'metadata', 'xesam:title'], stdout=subprocess.PIPE)
-    title, err = process.communicate()
-    return '%s - %s' % (artist, title)
+    if len(artist) > 0:
+        process = subprocess.Popen(['playerctl', 'metadata', 'xesam:title'], stdout=subprocess.PIPE)
+        title, err = process.communicate()
+        return '%s - %s' % (artist, title)
+    return 'No player running'
 
 
 def get_playerctl_color():
     process = subprocess.Popen(['playerctl', 'status'], stdout=subprocess.PIPE)
     playing, err = process.communicate()
-    return "#00FF00" if "Play" in playing else "#FFFF00"
+    return "#FF0000" if len(playing) == 0 else "#00FF00" if "Play" in playing else "#FFFF00"
 
 
 def get_uptime():
