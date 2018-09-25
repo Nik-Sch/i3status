@@ -35,11 +35,6 @@ import os
 import colorsys
 import time
 import math
-import gi
-import random
-
-gi.require_version('Notify', '0.7')
-# from gi.repository import Notify
 
 def humanbytes(B):
    B = float(B)
@@ -77,7 +72,6 @@ def get_mate():
                 dudes.append(peoples.pop(0));
             leaderboard[i] = dudes;
             i += len(dudes);
-        # print leaderboard
         textArray = [];
         leadershipEmoji = {
         0: u'🥇',
@@ -93,23 +87,26 @@ def get_mate():
                 dudesText = ', '.join(list(map(lambda dude: "%s (%s)" %(dude['name'], dude['konsumiert']), leaderboard[i])));
                 textArray.append(emoji + ' ' +  dudesText);
         textArray = textArray[::-1];
-        # print ', '.join(textArray)
         return ', '.join(textArray)
     except Exception as e:
         print >> sys.stderr, 'Mate:' + str(e)
         return ''
 
+
 def get_playerctl():
     process = subprocess.Popen(['playerctl', 'metadata', 'xesam:artist'], stdout=subprocess.PIPE)
     artist, err = process.communicate()
-    process = subprocess.Popen(['playerctl', 'metadata', 'xesam:title'], stdout=subprocess.PIPE)
-    title, err = process.communicate()
-    return '%s - %s' % (artist, title)
+    if len(artist) > 0:
+        process = subprocess.Popen(['playerctl', 'metadata', 'xesam:title'], stdout=subprocess.PIPE)
+        title, err = process.communicate()
+        return '%s - %s' % (artist, title)
+    return 'No player running'
+
 
 def get_playerctl_color():
     process = subprocess.Popen(['playerctl', 'status'], stdout=subprocess.PIPE)
     playing, err = process.communicate()
-    return "#00FF00" if "Play" in playing else "#FFFF00"
+    return "#FF0000" if len(playing) == 0 else "#00FF00" if "Play" in playing else "#FFFF00"
 
 
 def get_uptime():
@@ -140,21 +137,20 @@ def network_watch_thread():
             global_max = s
         fifo.append(s)
         l = list(fifo)
-        avg = 0
-        for entry in l:
-            avg += entry
-            avg = avg / amount
-            m = max(l)
-            res_list = [ int(x / m * 7) for x in l]
-            level_str = u'▁▂▃▄▅▆▇█'
-            res_list = [ level_str[min(max(x, 0), 7)] for x in res_list]
-            res_str = ''.join(res_list)
-            network_string = u'%s max: %s/s cur: %s/s avg: %s/s gmax: %s/s' % (res_str, humanbytes(m*1024), humanbytes(s*1024), humanbytes(avg*1024), humanbytes(global_max*1024))
-            color = colorsys.hsv_to_rgb(1, 0, 0.5 + 0.5*m/global_max)
-            color8bit = tuple([i*255 for i in color])
-            network_color = "#%02x%02x%02x" % color8bit
+        avg = sum(l) / amount
+        m = max(l)
+        res_list = [ int(x / m * 7) for x in l]
+        level_str = u'▁▂▃▄▅▆▇█'
+        res_list = [ level_str[min(max(x, 0), 7)] for x in res_list]
+        res_str = ''.join(res_list)
+        network_string = u'%s max: %s/s cur: %s/s avg: %s/s gmax: %s/s' % (res_str, humanbytes(m*1024), humanbytes(s*1024), humanbytes(avg*1024), humanbytes(global_max*1024))
+        color = colorsys.hsv_to_rgb(1, 0, 0.5 + 0.5*m/global_max)
+        color8bit = tuple([i*255 for i in color])
+        network_color = "#%02x%02x%02x" % color8bit
+
 def get_net():
     return network_string
+
 def get_net_color():
     return network_color
 
@@ -179,6 +175,7 @@ def get_ram_color():
     color8bit = tuple([i*255 for i in color])
     return "#%02x%02x%02x" % color8bit
 
+
 def get_cpu_fan():
     process = subprocess.Popen(['sensors'], stdout=subprocess.PIPE)
     out, err = process.communicate();
@@ -186,6 +183,8 @@ def get_cpu_fan():
     if regex == None:
         return '';
     return regex.group(1);
+
+
 def get_cpu_temp():
     returnList = [];
 
@@ -205,12 +204,13 @@ def get_cpu_temp():
             color = colorsys.hsv_to_rgb(1.0/3.0 * (1 - percent), 1, 1);
             color8bit = tuple([i*255 for i in color])
             returnList.append({
-                'text': "%s: %.1f°C" % ('CPU Temp', value),
+                'text': "%s: %.1f°C" % ('Temp', value),
                 'color': "#%02x%02x%02x" % color8bit,
                 'value': value
             })
     returnList.sort(key=lambda x: x['value'], reverse=True)
     return returnList[1];
+
 
 def get_tma():
     try:
@@ -219,11 +219,15 @@ def get_tma():
         f.close();
         tma = json.loads(tma_string);
         if tma['old']:
+<<<<<<< HEAD
             # n = Notify.Notification.new("Oh oh", "Logge dich mal lieber wieder ein")
             # n.set_urgency(Notify.Urgency.CRITICAL)
             # n.add_action('asd', 'asd', lambda x: echo(x))
             # os.popen(os.environ['HOME'] + '/.config/i3status/toggle_scratch.js MyTMA -s')
             # n.show()
+=======
+            os.popen(os.environ['HOME'] + '/.config/i3status/toggle_scratch.js MyTMA -s')
+>>>>>>> 54c9ce2568315915603d0fd86a0b861aa5a783c0
             return "OH OH";
         regex = re.search('(\d+):(\d+)', tma['netto'])
         netto = int(regex.group(1)) * 60 + int(regex.group(2))
@@ -269,6 +273,7 @@ def get_tma_color():
             return "#%02x%02x%02x" % color8bit
     except Exception:
         return "";
+
 def get_tma_emojis():
     try:
         f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
@@ -304,6 +309,7 @@ def get_tma_emojis():
         return ' '.join(colleagues_present)
     except Exception:
         return "";
+
 def get_cpu_color(text):
     percent = float(re.search('\d+', text).group(0))/100
     color = colorsys.hsv_to_rgb(1.0/3.0 * (1 - percent), 1, 1);
@@ -356,18 +362,17 @@ if __name__ == '__main__':
             for entry in j:
                 if entry['name'] == 'cpu_usage':
                     entry['color'] = get_cpu_color(entry['full_text'])
-            j.insert(-2, {'full_text' : '%s' % get_ram(), 'name' : 'ram', 'color' : get_ram_color()})
+            j.insert(-2, {'full_text' : get_ram(), 'name' : 'ram', 'color' : get_ram_color()})
 
-            # insert information into the start of the json, but could be anywhere
-            j.insert(0, {'full_text' : '%s' % get_playerctl(), 'name' : 'playerctl', 'color' : '%s' % get_playerctl_color()})
-            j.insert(0, {'full_text' : '%s' % get_net(), 'name' : 'network', 'color' : get_net_color()})
-            j.insert(0, {'full_text' : '%s' % get_tma(), 'name' : 'tma', 'color' : get_tma_color()})
-            j.insert(0, {'full_text' : '%s' % get_uptime(), 'name' : 'uptime', 'color' : '#ffffff'})
-            j.insert(0, {'full_text' : '%s' % get_cpu_fan(), 'name' : 'uptime', 'color' : '#ffffff'})
+            j.insert(0, {'full_text' : get_playerctl(), 'name' : 'playerctl', 'color' : get_playerctl_color()})
+            j.insert(0, {'full_text' : get_net(), 'name' : 'network', 'color' : get_net_color()})
+            j.insert(0, {'full_text' : get_tma(), 'name' : 'tma', 'color' : get_tma_color()})
+            j.insert(0, {'full_text' : get_uptime(), 'name' : 'uptime', 'color' : '#ffffff'})
+            j.insert(0, {'full_text' : get_cpu_fan(), 'name' : 'uptime', 'color' : '#ffffff'})
             temp = get_cpu_temp()
-            j.insert(0, {'full_text' : '%s' % temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
-            j.insert(0, {'full_text' : '%s' % get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff', 'markup': 'pango'})
-            j.insert(0, {'full_text' : '%s' % get_mate(), 'name' : 'mate', 'color' : '#ffffff', 'markup': 'pango'})
+            j.insert(0, {'full_text' : temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
+            j.insert(0, {'full_text' : get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff', 'markup': 'pango'})
+            j.insert(0, {'full_text' : get_mate(), 'name' : 'mate', 'color' : '#ffffff', 'markup': 'pango'})
 
 
             # and echo back new encoded json
