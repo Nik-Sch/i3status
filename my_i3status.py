@@ -222,7 +222,7 @@ def get_tma():
             # n = Notify.Notification.new("Oh oh", "Logge dich mal lieber wieder ein")
             # n.set_urgency(Notify.Urgency.CRITICAL)
             # n.add_action('asd', 'asd', lambda x: echo(x))
-            os.popen(os.environ['HOME'] + '/.config/i3status/toggle_scratch.js MyTMA -s')
+            # os.popen(os.environ['HOME'] + '/.config/i3status/toggle_scratch.js MyTMA -s')
             # n.show()
             return "OH OH";
         regex = re.search('(\d+):(\d+)', tma['netto'])
@@ -349,7 +349,8 @@ if __name__ == '__main__':
             line, prefix = read_line(), ''
             # ignore comma at start of lines
             if line.startswith(','):
-                line, prefix = line[1:], ','
+                line = line[1:]
+                prefix = ','
 
             j = json.loads(line)
             for entry in j:

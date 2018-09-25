@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/Nik-Sch/i3status#readme",
   "dependencies": {
-    "command-line-args": "^5.0.2"
+    "cheerio": "^1.0.0-rc.2",
+    "command-line-args": "^5.0.2",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5"
   }
 }
