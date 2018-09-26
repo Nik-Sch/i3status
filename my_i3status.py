@@ -211,24 +211,20 @@ def get_cpu_temp():
     returnList.sort(key=lambda x: x['value'], reverse=True)
     return returnList[1];
 
-
+def tma_thread():
+    global tma
+    global tma_last_update
+    tma = {}
+    tma_last_update = 0
+    process = subprocess.Popen([os.environ['HOME'] + '/.config/i3status/tma_server.js'], stdout=subprocess.PIPE)
+    while process.poll() is None:
+        tma_string  = process.stdout.readline()
+        tma = json.loads(tma_string)
+        tma_last_update = time.time()
 def get_tma():
     try:
-        f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
-        tma_string = f.readline();
-        f.close();
-        tma = json.loads(tma_string);
-        if tma['old']:
-<<<<<<< HEAD
-            # n = Notify.Notification.new("Oh oh", "Logge dich mal lieber wieder ein")
-            # n.set_urgency(Notify.Urgency.CRITICAL)
-            # n.add_action('asd', 'asd', lambda x: echo(x))
-            # os.popen(os.environ['HOME'] + '/.config/i3status/toggle_scratch.js MyTMA -s')
-            # n.show()
-=======
-            os.popen(os.environ['HOME'] + '/.config/i3status/toggle_scratch.js MyTMA -s')
->>>>>>> 54c9ce2568315915603d0fd86a0b861aa5a783c0
-            return "OH OH";
+        if time.time() - tma_last_update > 20:
+            return str(tma_last_update)
         regex = re.search('(\d+):(\d+)', tma['netto'])
         netto = int(regex.group(1)) * 60 + int(regex.group(2))
         regex = re.search('(\d+):(\d+)', tma['brutto'])
@@ -254,11 +250,7 @@ def get_tma():
 
 def get_tma_color():
     try:
-        f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
-        tma_string = f.readline();
-        f.close();
-        tma = json.loads(tma_string);
-        if tma['old']:
+        if time.time() - tma_last_update > 20:
             return "#FF0000";
         regex = re.search('(\d+):(\d+)', tma['netto']);
         netto = int(regex.group(1)) * 60 + int(regex.group(2))
@@ -276,11 +268,7 @@ def get_tma_color():
 
 def get_tma_emojis():
     try:
-        f  = open(os.environ['HOME'] + '/.config/i3status/tma.json', "r");
-        tma_string = f.readline();
-        f.close();
-        tma = json.loads(tma_string);
-        if tma['old']:
+        if time.time() - tma_last_update > 20:
             return "OH OH";
         emoji_config = {
             'Kreowsky, Philipp': '🍺',
@@ -341,6 +329,8 @@ def read_line():
 if __name__ == '__main__':
     net_thread = Thread(target = network_watch_thread, args = [])
     net_thread.start()
+    tma_thread = Thread(target = tma_thread, args = [])
+    tma_thread.start()
 
     # Notify.init("Your status bar")
 

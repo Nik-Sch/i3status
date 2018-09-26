@@ -2,3 +2,4 @@ node_modules/
 tma.json
 error.log
 stderr*
+tma-cookies.json

@@ -4,13 +4,16 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 const {env} = require('process');
 const child_process = require('child_process');
+const keytar = require('keytar');
+const FileCookieStore = require('tough-cookie-filestore');
+const cookieFile = env.HOME + '/.config/i3status/tma-cookies.json';
+if (!fs.existsSync(cookieFile)) {
+  fs.writeFileSync(cookieFile, '');
+}
+let j = request.jar(new FileCookieStore(cookieFile));
 
-let session = null;
+let session = null, username = null, password = null;
 let getTma = async () => {
-  var j = request.jar();
-  var cookie = request.cookie('JSESSIONID=' + session);
-  var url = 'https://mytma.fe.hhi.de';
-  j.setCookie(cookie, url);
   let resp = await request({url: 'https://mytma.fe.hhi.de/sinfo/Mytma?formID=START&wahll=ajaxZeitstatus&ajaxFormular=1', jar:j});
   resp = JSON.parse(resp);
   let netto, brutto, total;
@@ -31,16 +34,16 @@ let getTma = async () => {
   }
 
   resp = await request({
-          method: 'POST', 
-          url: 'https://mytma.fe.hhi.de/sinfo/Mytma', 
+          method: 'POST',
+          url: 'https://mytma.fe.hhi.de/sinfo/Mytma',
           jar:j,
           form: {
                  formID: 'ANABWES',
-		FORMparameter: '',
-		listenWahl:     5,
-		modulid:        1,
-		sprachID: '',
-		wahll: 'FormularAuswahl'
+            		FORMparameter: '',
+            		listenWahl:     5,
+            		modulid:        1,
+            		sprachID: '',
+            		wahll: 'FormularAuswahl'
           }
   });
 $ = cheerio.load(resp);
@@ -53,40 +56,59 @@ $('.rundrumZelleMA').each((i, td) => {
 		    present: $(td).attr('title').search('gekommen') > -1
 		});
 	}
-        
+
 });
   tma = {old: false, netto, brutto, total, colleagues};
-console.log('updated');
-  fs.writeFileSync(env.HOME + '/.config/i3status/tma.json', JSON.stringify(tma));
+  console.log(JSON.stringify(tma));
+  // fs.writeFileSync(env.HOME + '/.config/i3status/tma.json', JSON.stringify(tma));
 
 
 };
-let getSessionId = async () => {
-	while(session == null) {
-		session = child_process.execSync('zenity --entry --text "Gief Session ID:" --title "SessionID"');
-		try{
-		var j = request.jar();
-		  var cookie = request.cookie('JSESSIONID=' + session);
-		  var url = 'https://mytma.fe.hhi.de';
-		  j.setCookie(cookie, url);
-		let resp = await request({url: 'https://mytma.fe.hhi.de/sinfo/Mytma?formID=START&wahll=ajaxZeitstatus&ajaxFormular=1', jar:j});
-	JSON.parse(resp); //Super Hacky aber worked. Wenn falscher Code wird kein JSON zurück gegeben
-
-		} catch(e) {
-			console.error(e);
-			session = null;
-		}
-	}
+let getLogin = async () => {
+  username = child_process.execSync('zenity --entry --text "Gief Username:" --title "tma"').toString().replace('\n', '').trim();
+  password = child_process.execSync('zenity --password --text "Gief Password:" --title "tma"').toString().replace('\n', '').trim();
+}
+let login = async () => {
+  await getLogin();
+  resp = await request({
+          method: 'POST',
+          url: 'https://mytma.fe.hhi.de/sinfo/Mytma',
+          jar: j,
+          form: {
+               formID: 'LOGIN',
+            		user: username,
+                datenBank: 0,
+                passWord: password,
+            		wahll: 'FormularAuswahl'
+          }
+  });
+  if (resp.indexOf('Siemens MyTMA - Login') > -1) {
+    username = null;
+    password = null;
+    await login();
+  }
+  return true;
+  console.log(j);
+  console.log(resp);
+}
+let verifySessionId = async () => {
+  try{
+    let resp = await request({url: 'https://mytma.fe.hhi.de/sinfo/Mytma?formID=START&wahll=ajaxZeitstatus&ajaxFormular=1', jar:j});
+  JSON.parse(resp); //Super Hacky aber worked. Wenn falscher Code wird kein JSON zurück gegeben
+    } catch(e) {
+      await login();
+    }
 }
 (async () => {
-	await getSessionId();
-	await getTma();
+  await verifySessionId();
+  await getTma();
 	setInterval(async () => {
-		try {
-			await getSessionId();
-			await getTma();
-		} catch(e) {
-			session = null;
-		}
+    try {
+      await verifySessionId();
+      await getTma();
+    } catch (e) {
+      console.error(e);
+    }
 	}, 10000);
+
 })();
