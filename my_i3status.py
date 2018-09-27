@@ -54,44 +54,47 @@ def humanbytes(B):
    elif TB <= B:
       return '{0:3.0f} TB'.format(B/TB)
 
-def get_mate():
-    try:
-        process = subprocess.Popen(["curl", "-s", "https://anton-schulte.de/matebot/"], stdout=subprocess.PIPE)
-        mate, err = process.communicate()
-        peoples = json.loads(mate)
-        peoples = sorted(peoples, key=lambda x: int(x['konsumiert']), reverse=True)
-        rank = 3;
-        if (rank > len(peoples)):
-            rank = len(peoples);
-        leaderboard = {};
-        i = 0;
-        while (i < rank and len(peoples) > 0):
-            dudes = [];
-            dudes.append(peoples.pop(0));
-            while(len(peoples) > 0 and int(peoples[0]['konsumiert']) == int(dudes[0]['konsumiert'])):
+def matebot_watch_thread():
+    global matebot_text
+    matebot_text = ''
+    while True:
+        try:
+            process = subprocess.Popen(["curl", "-s", "https://anton-schulte.de/matebot/"], stdout=subprocess.PIPE)
+            mate, err = process.communicate()
+            peoples = json.loads(mate)
+            peoples = sorted(peoples, key=lambda x: int(x['konsumiert']), reverse=True)
+            rank = 3;
+            if (rank > len(peoples)):
+                rank = len(peoples);
+            leaderboard = {};
+            i = 0;
+            while (i < rank and len(peoples) > 0):
+                dudes = [];
                 dudes.append(peoples.pop(0));
-            leaderboard[i] = dudes;
-            i += len(dudes);
-        textArray = [];
-        leadershipEmoji = {
-        0: u'🥇',
-        1: u'🥈',
-        2: u'🥉'
-        }
-        for i in range(rank, -1, -1):
-            if i in leadershipEmoji:
-                emoji = leadershipEmoji[i]
-            else:
-                emoji = ''.join([u'💩' for x in range(2, i)])
-            if i in leaderboard:
-                dudesText = ', '.join(list(map(lambda dude: "%s (%s)" %(dude['name'], dude['konsumiert']), leaderboard[i])));
-                textArray.append(emoji + ' ' +  dudesText);
-        textArray = textArray[::-1];
-        return ', '.join(textArray)
-    except Exception as e:
-        print >> sys.stderr, 'Mate:' + str(e)
-        return ''
-
+                while(len(peoples) > 0 and int(peoples[0]['konsumiert']) == int(dudes[0]['konsumiert'])):
+                    dudes.append(peoples.pop(0));
+                leaderboard[i] = dudes;
+                i += len(dudes);
+            textArray = [];
+            leadershipEmoji = {
+            0: u'🥇',
+            1: u'🥈',
+            2: u'🥉'
+            }
+            for i in range(rank, -1, -1):
+                if i in leadershipEmoji:
+                    emoji = leadershipEmoji[i]
+                else:
+                    emoji = ''.join([u'💩' for x in range(2, i)])
+                if i in leaderboard:
+                    dudesText = ', '.join(list(map(lambda dude: "%s (%s)" %(dude['name'], dude['konsumiert']), leaderboard[i])));
+                    textArray.append(emoji + ' ' +  dudesText);
+            textArray = textArray[::-1];
+            matebot_text = ', '.join(textArray)
+        except Exception as e:
+            print >> sys.stderr, 'Mate:' + str(e)
+            matebot_text = ''
+        time.sleep(1)
 
 def get_playerctl():
     process = subprocess.Popen(['playerctl', 'metadata', 'xesam:artist'], stdout=subprocess.PIPE)
@@ -122,7 +125,7 @@ def network_watch_thread():
     network_color = ''
     amount = 16
     fifo = deque(amount*[1/1024.0], amount)
-    process = subprocess.Popen(['ifstat', '-i', 'enp0s25', '-q', '1'], stdout=subprocess.PIPE)
+    process = subprocess.Popen(['ifstat', '-ni', 'enp0s25', '-q', '1'], stdout=subprocess.PIPE)
     global_max = 1/1024.0;
     while process.poll() is None:
         res  = process.stdout.readline()
@@ -143,6 +146,7 @@ def network_watch_thread():
         level_str = u'▁▂▃▄▅▆▇█'
         res_list = [ level_str[min(max(x, 0), 7)] for x in res_list]
         res_str = ''.join(res_list)
+        res_str = ''
         network_string = u'%s max: %s/s cur: %s/s avg: %s/s gmax: %s/s' % (res_str, humanbytes(m*1024), humanbytes(s*1024), humanbytes(avg*1024), humanbytes(global_max*1024))
         color = colorsys.hsv_to_rgb(1, 0, 0.5 + 0.5*m/global_max)
         color8bit = tuple([i*255 for i in color])
@@ -211,20 +215,23 @@ def get_cpu_temp():
     returnList.sort(key=lambda x: x['value'], reverse=True)
     return returnList[1];
 
-def tma_thread():
-    global tma
-    global tma_last_update
+def tma_watch_thread():
+    global tma_text
+    global tma_emoji
+    global tma_color
     tma = {}
-    tma_last_update = 0
+    tma_text = ''
+    tma_color = '#FF0000'
+    tma_emoji = ''
     process = subprocess.Popen([os.environ['HOME'] + '/.config/i3status/tma_server.js'], stdout=subprocess.PIPE)
     while process.poll() is None:
         tma_string  = process.stdout.readline()
         tma = json.loads(tma_string)
-        tma_last_update = time.time()
-def get_tma():
+        tma_text = get_tma(tma)
+        tma_color = get_tma_color(tma)
+        tma_emoji = get_tma_emojis(tma)
+def get_tma(tma):
     try:
-        if time.time() - tma_last_update > 20:
-            return str(tma_last_update)
         regex = re.search('(\d+):(\d+)', tma['netto'])
         netto = int(regex.group(1)) * 60 + int(regex.group(2))
         regex = re.search('(\d+):(\d+)', tma['brutto'])
@@ -247,11 +254,8 @@ def get_tma():
     except Exception as e:
         print >> sys.stderr, 'tma sucks: ' + str(e)
         return ""
-
-def get_tma_color():
+def get_tma_color(tma):
     try:
-        if time.time() - tma_last_update > 20:
-            return "#FF0000";
         regex = re.search('(\d+):(\d+)', tma['netto']);
         netto = int(regex.group(1)) * 60 + int(regex.group(2))
         regex = re.search('(\d+):(\d+)', tma['brutto'])
@@ -266,10 +270,8 @@ def get_tma_color():
     except Exception:
         return "";
 
-def get_tma_emojis():
+def get_tma_emojis(tma):
     try:
-        if time.time() - tma_last_update > 20:
-            return "OH OH";
         emoji_config = {
             'Kreowsky, Philipp': '🍺',
             'Schelten, Niklas': '🧗',
@@ -329,8 +331,10 @@ def read_line():
 if __name__ == '__main__':
     net_thread = Thread(target = network_watch_thread, args = [])
     net_thread.start()
-    tma_thread = Thread(target = tma_thread, args = [])
+    tma_thread = Thread(target = tma_watch_thread, args = [])
     tma_thread.start()
+    matebot_thread = Thread(target = matebot_watch_thread, args = [])
+    matebot_thread.start()
 
     # Notify.init("Your status bar")
 
@@ -356,13 +360,13 @@ if __name__ == '__main__':
 
             j.insert(0, {'full_text' : get_playerctl(), 'name' : 'playerctl', 'color' : get_playerctl_color()})
             j.insert(0, {'full_text' : get_net(), 'name' : 'network', 'color' : get_net_color()})
-            j.insert(0, {'full_text' : get_tma(), 'name' : 'tma', 'color' : get_tma_color()})
+            j.insert(0, {'full_text' : tma_text, 'name' : 'tma', 'color' : tma_color})
             j.insert(0, {'full_text' : get_uptime(), 'name' : 'uptime', 'color' : '#ffffff'})
             j.insert(0, {'full_text' : get_cpu_fan(), 'name' : 'uptime', 'color' : '#ffffff'})
             temp = get_cpu_temp()
             j.insert(0, {'full_text' : temp['text'], 'name' : 'cputemp', 'color' : temp['color']})
-            j.insert(0, {'full_text' : get_tma_emojis(), 'name' : 'tma_emoji', 'color' : '#ffffff', 'markup': 'pango'})
-            j.insert(0, {'full_text' : get_mate(), 'name' : 'mate', 'color' : '#ffffff', 'markup': 'pango'})
+            j.insert(0, {'full_text' : tma_emoji, 'name' : 'tma_emoji', 'color' : '#ffffff', 'markup': 'pango'})
+            j.insert(0, {'full_text' : matebot_text, 'name' : 'mate', 'color' : '#ffffff', 'markup': 'pango'})
 
 
             # and echo back new encoded json
