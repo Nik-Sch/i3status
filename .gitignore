@@ -3,3 +3,4 @@ tma.json
 error.log
 stderr*
 tma-cookies.json
+**/*.pyc
