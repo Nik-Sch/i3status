@@ -4,7 +4,6 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 const {env} = require('process');
 const child_process = require('child_process');
-const keytar = require('keytar');
 const FileCookieStore = require('tough-cookie-filestore');
 const cookieFile = env.HOME + '/.config/i3status/tma-cookies.json';
 if (!fs.existsSync(cookieFile)) {
