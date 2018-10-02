@@ -24,12 +24,13 @@ order += "playerctl"
 order += "volume master"
 order += "tztime local"
 
-weather_owm {
-  api_key = "4f9e1609fa3d8c08bc52fcd794d9b293"
-  city = "Berlin"
-  country = "DE"
-  cache_timeout = "30"
+air_quality {
+  auth_token = "f3e3e2334f84e20799ac8e89b559a0ca9662e80d"
+  location = "@10030"
+  format = "[\?color=aqi AirQuality: {aqi} {category}]"
+  on_click 1 = 'exec xdg-open "https://aqicn.org/city/germany/berlin/wedding-amrumer-str."'
 }
+
 weather_yahoo {
   woeid = "26821871"
   format_separator = ', '
@@ -39,43 +40,42 @@ weather_yahoo {
   icon_cloud = "☁️"
   icon_snow = "☃️"
   icon_sun = "☀️"
+  on_click 1 = 'exec xdg-open "https://www.google.de/search?q=weather"'
 }
-air_quality {
-  auth_token = "f3e3e2334f84e20799ac8e89b559a0ca9662e80d"
-  location = "@10030"
-  format = "[\?color=aqi AirQuality: {aqi} {category}]"
+
+tma {
+  on_click 1 = 'exec xdg-open "https://mytma.fe.hhi.de/sinfo/Mytma"'
 }
-ethernet _first_ {
-    # if you use %speed, i3status requires root privileges
-    format_up = "E: %ip"
-    format_down = "E: down"
+
+matebot {
+  # replace with increment Mate
+  on_click 1 = 'exec xdg-open "https://docs.google.com/spreadsheets/d/1tSFjMp_HQiH-u2fdUoKGKL796eAxpCSx0Zl_Ihe4UDo/edit#gid=0"'
+}
+
+network {
+  fuck_graph = false
+}
+
+sensors {
+  on_click 1 = 'exec ~/.config/i3status/toggle_scratch.js -fc Gnome-system-monitor'
+}
+
+system {
+  on_click 1 = 'exec ~/.config/i3status/toggle_scratch.js -fc Gnome-system-monitor'
+}
+
+playerctl {
+  on_click 1 = 'exec playerctl play-pause'
+}
+
+volume master {
+  format = "♪: %volume"
+  format_muted = "♪: muted (%volume)"
+  device = "pulse:1"
+  on_click 1 = 'exec pavucontrol'
 }
 
 tztime local {
     format = "%Y-%m-%d %H:%M:%S"
-    on_click 1 = "exec notify-send asd"
 }
 
-cpu_usage {
-    format = "CPU: %usage"
-    max_threshold = 75
-    degraded_threshold = 50
-}
-get_ram {
-  format = "yolo"
-}
-load {
-    format = "Load: %1min"
-}
-
-disk "/" {
-    format = "%avail"
-}
-network {
-  fuck_graph = true
-}
-volume master {
-        format = "♪: %volume"
-        format_muted = "♪: muted (%volume)"
-        device = "pulse:1"
-}
