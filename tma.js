@@ -74,11 +74,11 @@ let login = async () => {
           url: 'https://mytma.fe.hhi.de/sinfo/Mytma',
           jar: j,
           form: {
-               formID: 'LOGIN',
-            		user: username,
-                datenBank: 0,
-                passWord: password,
-            		wahll: 'FormularAuswahl'
+            formID: 'LOGIN',
+            user: username,
+            datenBank: 0,
+            passWord: password,
+            wahll: 'FormularAuswahl'
           }
   });
   if (resp.indexOf('Siemens MyTMA - Login') > -1) {
@@ -93,21 +93,21 @@ let login = async () => {
 let verifySessionId = async () => {
   try{
     let resp = await request({url: 'https://mytma.fe.hhi.de/sinfo/Mytma?formID=START&wahll=ajaxZeitstatus&ajaxFormular=1', jar:j});
-  JSON.parse(resp); //Super Hacky aber worked. Wenn falscher Code wird kein JSON zurück gegeben
-    } catch(e) {
-      await login();
-    }
+    JSON.parse(resp); //Super Hacky aber worked. Wenn falscher Code wird kein JSON zurück gegeben
+  } catch(e) {
+    await login();
+  }
 }
 (async () => {
   await verifySessionId();
   await getTma();
-	setInterval(async () => {
+  setInterval(async () => {
     try {
       await verifySessionId();
       await getTma();
     } catch (e) {
       console.error(e);
     }
-	}, 10000);
+  }, 10000);
 
 })();

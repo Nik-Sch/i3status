@@ -7,6 +7,7 @@ import json
 
 class Py3status:
     # matebot_text = ''
+    __cachedUntil = 60
 
     def __init__(self):
         matebot_thread = Thread(target = self.__matebot_watch_thread, args = [])
@@ -51,14 +52,14 @@ class Py3status:
             except Exception as e:
                 print >> sys.stderr, 'Mate:' + str(e)
                 matebot_text = ''
-            time.sleep(1)
+            time.sleep(self.__cachedUntil)
 
     def click_info(self):
         return {
             'full_text': self.matebot_text,
-            'cached_until': self.py3.time_in(1)
+            'cached_until': self.py3.time_in(self.__cachedUntil)
         }
-        
+
 if __name__ == "__main__":
     """
     Run module in test mode.
