@@ -7,6 +7,7 @@ import json
 import os
 import re
 import colorsys
+import datetime
 class Py3status:
     # matebot_text = ''
     tma_emoji = 'OHOH'
@@ -51,18 +52,21 @@ class Py3status:
             level_str = u'░▁▂▃▄▅▆▇█'
             block = u'█'
             empty = u'░'
+            six_hours = (datetime.datetime.now() + datetime.timedelta(0, 60*(360 - netto))).strftime("%H:%M")
             progress_bar = ''.join([block for i in range(0, netto/60)]) + level_str[(netto%60)*8/60] + ''.join([empty for i in range(netto/60 + 1, 8)])
             if (brutto - netto) != 0:
-                return "%s today: %sh, pause: %smin, total: %sh" % (
+                return u"%s today: %sh, pause: %smin, total: %sh, ⏰ %s" % (
                 progress_bar,
                 tma['netto'],
                 (brutto - netto) % 60,
-                tma['total'])
+                tma['total'],
+                six_hours)
             else:
-                return "%s today: %sh, total: %sh" % (
+                return u"%s today: %sh, total: %sh, ⏰ %s" % (
                 progress_bar,
                 tma['netto'],
-                tma['total'])
+                tma['total'],
+                six_hours)
         except Exception as e:
             print >> sys.stderr, 'tma sucks: ' + str(e)
             return ""
