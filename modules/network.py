@@ -40,11 +40,16 @@ class Py3status:
         self.network_color = ''
         amount = 16
         fifo = deque(amount*[1/1024.0], amount)
-        process = subprocess.Popen(['ifstat', '-ni', 'enp0s25', '-q', '1'], stdout=subprocess.PIPE)
+        process = subprocess.Popen(['ifstat', '-n', '-q', '1'], stdout=subprocess.PIPE)
+        process.poll()
+        res  = process.stdout.readline()
+        # print res
+        regex = re.search('^\s*(\S+)', res);
+        interface = regex.group(1)
         global_max = 1/1024.0;
         while process.poll() is None:
             res  = process.stdout.readline()
-            regex = re.search('(\d+\.\d+)\s*(\d+\.\d+)', res);
+            regex = re.search('^\s*(\d+\.\d+)\s*(\d+\.\d+)', res);
             if regex == None:
                 print >> sys.stderr, 'no match' + res
                 continue
@@ -63,7 +68,7 @@ class Py3status:
             res_str = ''.join(res_list)
             if self.fuck_graph:
                 res_str = ''
-            self.network_string = u'%s max: %s/s cur: %s/s avg: %s/s gmax: %s/s' % (res_str, self.__humanbytes(m*1024), self.__humanbytes(s*1024), self.__humanbytes(avg*1024), self.__humanbytes(global_max*1024))
+            self.network_string = u'%s: %s cur: %s/s avg: %s/s gmax: %s/s' % (interface, res_str, self.__humanbytes(s*1024), self.__humanbytes(avg*1024), self.__humanbytes(global_max*1024))
             color = colorsys.hsv_to_rgb(1, 0, 0.5 + 0.5*m/global_max)
             color8bit = tuple([i*255 for i in color])
             self.network_color = "#%02x%02x%02x" % color8bit
