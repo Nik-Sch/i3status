@@ -4,6 +4,7 @@ import sys
 import time
 import subprocess
 import json
+import requests
 
 class Py3status:
     # matebot_text = ''
@@ -17,9 +18,17 @@ class Py3status:
         self.matebot_text = ''
         while True:
             try:
-                process = subprocess.Popen(["curl", "-s", "https://anton-schulte.de/matebot/"], stdout=subprocess.PIPE)
-                mate, err = process.communicate()
-                peoples = json.loads(mate)
+                payload = {
+                "server-option": "eu0",
+                "d": "http://anton-schulte.de/matebot/",
+                "allowCookies": "on"
+                }
+                # cookies = dict(PHPSESSID='fnncmj9j35tufbjm6m0nnla1t2')
+                r = requests.post("https://eu0.proxysite.com/includes/process.php?action=update", data=payload)
+                # print r.text
+                # process = subprocess.Popen(["curl", "-s", "https://anton-schulte.de/matebot/"], stdout=subprocess.PIPE)
+                # mate, err = process.communicate()
+                peoples = json.loads(r.text)
                 peoples = sorted(peoples, key=lambda x: int(x['konsumiert']), reverse=True)
                 rank = 3;
                 if (rank > len(peoples)):
