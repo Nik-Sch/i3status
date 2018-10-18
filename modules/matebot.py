@@ -8,7 +8,7 @@ import requests
 
 class Py3status:
     # matebot_text = ''
-    __cachedUntil = 60
+    __cachedUntil = 5
 
     def __init__(self):
         matebot_thread = Thread(target = self.__matebot_watch_thread, args = [])
