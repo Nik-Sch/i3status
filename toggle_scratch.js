@@ -37,7 +37,7 @@ console.log(args)
 let title = args.title;
 
 function getNodes(data) {
-  if (data.output && data.name && (args.checkClass ? (data.window_properties && data.window_properties.class.search(title) > -1 ): data.name.search(title) > -1)) {
+  if (data.output && data.name && (args.checkClass ? (data.window_properties && data.window_properties.class && data.window_properties.class.search(title) > -1 ): data.name.search(title) > -1)) {
     console.log('found');
     return data.output.search("__i3") > -1;
   }

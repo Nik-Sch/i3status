@@ -84,6 +84,7 @@ let login = async () => {
   if (resp.indexOf('Siemens MyTMA - Login') > -1) {
     username = null;
     password = null;
+    exec(`notfiy-send 'TMA: Wrong username or password'`);
     await login();
   }
   return true;

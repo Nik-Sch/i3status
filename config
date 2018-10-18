@@ -48,6 +48,7 @@ weather_yahoo {
   icon_snow = "☃️"
   icon_sun = "☀️"
   on_click 1 = 'exec xdg-open "https://www.google.de/search?q=weather"'
+  on_click 3 = 'exec xdg-open "https://www.wetter.com/regenradar/deutschland/berlin/DE0001020.html"'
 }
 
 tma {
@@ -63,7 +64,7 @@ uptime {
 }
 
 network {
-  fuck_graph = false
+  fuck_graph = true
 }
 
 sensors {
@@ -76,7 +77,6 @@ system {
 
 playerctl {
   on_click 1 = 'exec playerctl play-pause'
-  on_click 2 = 'exec ~/.config/i3status/toggle_scratch.js -fc Spotify'
   on_click 3 = 'exec playerctl next'
 }
 
