@@ -12,6 +12,7 @@ if (!fs.existsSync(cookieFile)) {
 let j = request.jar(new FileCookieStore(cookieFile));
 
 let session = null, username = null, password = null;
+const delay = time => new Promise(res=>setTimeout(()=>res(),time));
 let getTma = async () => {
   let resp = await request({url: 'https://mytma.fe.hhi.de/sinfo/Mytma?formID=START&wahll=ajaxZeitstatus&ajaxFormular=1', jar:j});
   resp = JSON.parse(resp);
@@ -84,18 +85,29 @@ let login = async () => {
   if (resp.indexOf('Siemens MyTMA - Login') > -1) {
     username = null;
     password = null;
-    exec(`notfiy-send 'TMA: Wrong username or password'`);
+    child_process.execSync(`notify-send 'TMA: Wrong username or password'`);
     await login();
   }
   return true;
   console.log(j);
   console.log(resp);
 }
-let verifySessionId = async () => {
+let verifySessionId = async (firstTry = true) => {
   try{
-    let resp = await request({url: 'https://mytma.fe.hhi.de/sinfo/Mytma?formID=START&wahll=ajaxZeitstatus&ajaxFormular=1', jar:j});
+    let resp;
+    try {
+      resp = await request({url: 'https://mytma.fe.hhi.de/sinfo/Mytma?formID=START&wahll=ajaxZeitstatus&ajaxFormular=1', jar:j});
+    } catch (e) {
+      //Network error
+      if (firstTry) {
+        child_process.execSync(`notify-send 'TMA: Could not connect to server'`);
+      }
+      await delay(1000);
+      resp = await verifySessionId(false);
+    }
     JSON.parse(resp); //Super Hacky aber worked. Wenn falscher Code wird kein JSON zurück gegeben
   } catch(e) {
+    console.error(e);
     await login();
   }
 }
