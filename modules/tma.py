@@ -102,10 +102,14 @@ class Py3status:
                 'Vallavanthara, Amal': 'A'
             };
             returnString = '';
-            for name, emoji in emoji_config.iteritems():
-                for colleague in tma['colleagues']:
+            for colleague in tma['colleagues']:
+                found = False
+                for name, emoji in emoji_config.iteritems():
                     if colleague['name'] == name and colleague['present']:
+                        found = True
                         returnString += emoji;
+                if found == False and colleague['present']:
+                    returnString += str(colleague['name'][0])
             return '<big>' + returnString + '</big>'
             lastname = re.search('[^/]+$', os.environ['HOME']).group(0).lower();
             colleagues_present = [];
@@ -114,7 +118,8 @@ class Py3status:
                     regex = re.search('^(.).*, (.)', colleague['name'])
                     colleagues_present.append(regex.group(2) + regex.group(1))
             return ' '.join(colleagues_present)
-        except Exception:
+        except Exception as e:
+            print e
             return "";
 if __name__ == "__main__":
     """
