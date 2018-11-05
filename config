@@ -91,4 +91,3 @@ tztime local {
   format = "%Y-%m-%d %H:%M:%S"
   on_click 1 = 'exec xdg-open https://calendar.google.com/calendar/r'
 }
-

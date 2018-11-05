@@ -112,13 +112,6 @@ class Py3status:
                     regex = re.search('^(.).*, (.)', colleague['name'])
                     returnString += str(regex.group(2))
             return '<big>' + returnString + '</big>'
-            lastname = re.search('[^/]+$', os.environ['HOME']).group(0).lower();
-            colleagues_present = [];
-            for colleague in tma['colleagues']:
-                if colleague['present'] and re.search('^[^,]*', colleague['name']).group(0).lower() != lastname:
-                    regex = re.search('^(.).*, (.)', colleague['name'])
-                    colleagues_present.append(regex.group(2) + regex.group(1))
-            return ' '.join(colleagues_present)
         except Exception as e:
             print e
             return "";
