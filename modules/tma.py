@@ -109,7 +109,8 @@ class Py3status:
                         found = True
                         returnString += emoji;
                 if found == False and colleague['present']:
-                    returnString += str(colleague['name'][0])
+                    regex = re.search('^(.).*, (.)', colleague['name'])
+                    returnString += str(regex.group(2))
             return '<big>' + returnString + '</big>'
             lastname = re.search('[^/]+$', os.environ['HOME']).group(0).lower();
             colleagues_present = [];
