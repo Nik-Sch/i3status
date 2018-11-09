@@ -56,8 +56,6 @@ tma {
 }
 
 matebot {
-  # replace with increment Mate
-  on_click 1 = 'exec xdg-open "https://docs.google.com/spreadsheets/d/1tSFjMp_HQiH-u2fdUoKGKL796eAxpCSx0Zl_Ihe4UDo/edit#gid=0"'
 }
 
 uptime {

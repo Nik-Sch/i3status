@@ -2,9 +2,9 @@
 from threading import Thread
 import sys
 import time
-import subprocess
 import json
 import requests
+import os
 
 class Py3status:
     # matebot_text = ''
@@ -14,21 +14,28 @@ class Py3status:
         matebot_thread = Thread(target = self.__matebot_watch_thread, args = [])
         matebot_thread.start()
 
+    def on_click(self, event):
+        """
+        event will be a dict like
+        {'y': 13, 'x': 1737, 'button': 1, 'name': 'example', 'instance': 'first'}
+        """
+        if (event['button'] == 1):
+            tma = os.popen(os.environ['HOME'] + '/.config/i3status/tma.js an_argument').read()
+            tma = json.loads(tma)
+            name = tma['name']
+            if os.system("zenity --question --text \"Maaaaate for " + name + "?\"") == 0:
+                result = os.popen("curl -s https://g0t001.uber.space/matebot/increment/" + name + "/").read()
+                os.system("notify-send \"" + result + "\"")
+            else:
+                os.system("notify-send 'No Mate for you'")
+
+
     def __matebot_watch_thread(self):
         self.matebot_text = ''
         while True:
             try:
-                payload = {
-                "server-option": "eu0",
-                "d": "http://anton-schulte.de/matebot/",
-                "allowCookies": "on"
-                }
-                # cookies = dict(PHPSESSID='fnncmj9j35tufbjm6m0nnla1t2')
-                r = requests.post("https://eu0.proxysite.com/includes/process.php?action=update", data=payload)
-                # print r.text
-                # process = subprocess.Popen(["curl", "-s", "https://anton-schulte.de/matebot/"], stdout=subprocess.PIPE)
-                # mate, err = process.communicate()
-                peoples = json.loads(r.text)
+                peoples = os.popen("curl -s https://g0t001.uber.space/matebot/").read()
+                peoples = json.loads(peoples)
                 peoples = sorted(peoples, key=lambda x: int(x['konsumiert']), reverse=True)
                 rank = 3;
                 if (rank > len(peoples)):
@@ -73,5 +80,5 @@ if __name__ == "__main__":
     """
     Run module in test mode.
     """
-    from py3status.module_test import module_test
-    module_test(Py3status)
+    # from py3status.module_test import module_test
+    # module_test(Py3status)

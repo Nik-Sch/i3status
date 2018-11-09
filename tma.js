@@ -1,8 +1,11 @@
 #!/usr/bin/env node
+
 const request = require('request-promise-native');
 const cheerio = require('cheerio');
 const fs = require('fs');
-const {env} = require('process');
+const {
+  env
+} = require('process');
 const child_process = require('child_process');
 const FileCookieStore = require('tough-cookie-filestore');
 const cookieFile = env.HOME + '/.config/i3status/tma-cookies.json';
@@ -11,54 +14,77 @@ if (!fs.existsSync(cookieFile)) {
 }
 let j = request.jar(new FileCookieStore(cookieFile));
 
-let session = null, username = null, password = null;
-const delay = time => new Promise(res=>setTimeout(()=>res(),time));
+let session = null,
+  username = null,
+  password = null;
+const delay = time => new Promise(res => setTimeout(() => res(), time));
 let getTma = async () => {
-  let resp = await request({url: 'https://mytma.fe.hhi.de/sinfo/Mytma?formID=START&wahll=ajaxZeitstatus&ajaxFormular=1', jar:j});
+  let resp = await request({
+    url: 'https://mytma.fe.hhi.de/sinfo/Mytma?formID=START&wahll=ajaxZeitstatus&ajaxFormular=1',
+    jar: j
+  });
   resp = JSON.parse(resp);
   let netto, brutto, total;
   let match = resp.inhalt.match(/(-?\d+:\d+) Std\. \(Nettozeit ohne Pausen\)/i);
   if (match !== null) {
-      netto = match[1];
+    netto = match[1];
   }
 
   match = resp.inhalt.match(/(-?\d+:\d+) Std\. \(Bruttozeit inkl. Pausen\)/i);
   if (match !== null) {
-      brutto = match[1];
+    brutto = match[1];
   }
 
   match = resp.inhalt.match(/heute:<\/td><td[^>]*>(-?\d+:\d+) Std/i);
   if (match !== null) {
-      total = match[1];
+    total = match[1];
 
   }
 
   resp = await request({
-          method: 'POST',
-          url: 'https://mytma.fe.hhi.de/sinfo/Mytma',
-          jar:j,
-          form: {
-                 formID: 'ANABWES',
-            		FORMparameter: '',
-            		listenWahl:     5,
-            		modulid:        1,
-            		sprachID: '',
-            		wahll: 'FormularAuswahl'
-          }
+    method: 'POST',
+    url: 'https://mytma.fe.hhi.de/sinfo/Mytma',
+    jar: j,
+    form: {
+      formID: 'ANABWES',
+      FORMparameter: '',
+      listenWahl: 5,
+      modulid: 1,
+      sprachID: '',
+      wahll: 'FormularAuswahl'
+    }
   });
-$ = cheerio.load(resp);
-let colleagues = [];
-$('.rundrumZelleMA').each((i, td) => {
-	let match = $(td).html().match(/[a-z ]+, [a-z ]+/i);
-	if (match !== null) {
-		colleagues.push({
-		    name: match[0].trim(),
-		    present: $(td).attr('title').search('gekommen') > -1
-		});
-	}
+  $ = cheerio.load(resp);
+  let colleagues = [];
+  $('.rundrumZelleMA').each((i, td) => {
+    let match = $(td).html().match(/[a-z ]+, [a-z ]+/i);
+    if (match !== null) {
+      colleagues.push({
+        name: match[0].trim(),
+        present: $(td).attr('title').search('gekommen') > -1
+      });
+    }
 
-});
-  tma = {old: false, netto, brutto, total, colleagues};
+  });
+
+  resp = await request({
+    url: 'https://mytma.fe.hhi.de/sinfo/Mytma',
+    jar: j
+  });
+  let name;
+  match = resp.match(/Hallo\s<strong>(\S+).*<\/strong>/i);
+  if (match !== null) {
+    name = match[1];
+  }
+
+  tma = {
+    old: false,
+    netto,
+    brutto,
+    total,
+    colleagues,
+    name
+  };
   console.log(JSON.stringify(tma));
   // fs.writeFileSync(env.HOME + '/.config/i3status/tma.json', JSON.stringify(tma));
 
@@ -71,16 +97,16 @@ let getLogin = async () => {
 let login = async () => {
   await getLogin();
   resp = await request({
-          method: 'POST',
-          url: 'https://mytma.fe.hhi.de/sinfo/Mytma',
-          jar: j,
-          form: {
-            formID: 'LOGIN',
-            user: username,
-            datenBank: 0,
-            passWord: password,
-            wahll: 'FormularAuswahl'
-          }
+    method: 'POST',
+    url: 'https://mytma.fe.hhi.de/sinfo/Mytma',
+    jar: j,
+    form: {
+      formID: 'LOGIN',
+      user: username,
+      datenBank: 0,
+      passWord: password,
+      wahll: 'FormularAuswahl'
+    }
   });
   if (resp.indexOf('Siemens MyTMA - Login') > -1) {
     username = null;
@@ -93,10 +119,13 @@ let login = async () => {
   console.log(resp);
 }
 let verifySessionId = async (firstTry = true) => {
-  try{
+  try {
     let resp;
     try {
-      resp = await request({url: 'https://mytma.fe.hhi.de/sinfo/Mytma?formID=START&wahll=ajaxZeitstatus&ajaxFormular=1', jar:j});
+      resp = await request({
+        url: 'https://mytma.fe.hhi.de/sinfo/Mytma?formID=START&wahll=ajaxZeitstatus&ajaxFormular=1',
+        jar: j
+      });
     } catch (e) {
       //Network error
       if (firstTry) {
@@ -106,21 +135,29 @@ let verifySessionId = async (firstTry = true) => {
       resp = await verifySessionId(false);
     }
     JSON.parse(resp); //Super Hacky aber worked. Wenn falscher Code wird kein JSON zurück gegeben
-  } catch(e) {
+  } catch (e) {
     console.error(e);
     await login();
   }
 }
-(async () => {
-  await verifySessionId();
-  await getTma();
-  setInterval(async () => {
-    try {
-      await verifySessionId();
-      await getTma();
-    } catch (e) {
-      console.error(e);
-    }
-  }, 10000);
 
-})();
+if (process.argv.length == 2) {
+  (async () => {
+    await verifySessionId();
+    await getTma();
+    setInterval(async () => {
+      try {
+        await verifySessionId();
+        await getTma();
+      } catch (e) {
+        console.error(e);
+      }
+    }, 10000);
+
+  })();
+} else {
+  (async () => {
+    await verifySessionId();
+    await getTma();
+  })()
+}
